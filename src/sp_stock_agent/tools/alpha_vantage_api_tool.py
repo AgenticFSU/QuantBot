@@ -9,30 +9,33 @@ from pathlib import Path
 env_path = Path(__file__).resolve().parents[3] / '.env'
 load_dotenv(dotenv_path=env_path)
 
-class AlphaVantageTool():
-    @tool("Fetch the daily S&P data")
-    def get_daily_stock_data(self, symbol):
-        """Fetch daily OHLC data for a given stock symbol using Alpha Vantage API directly."""
-        api_key = os.environ['ALPHA_VANTAGE_API_KEY']
-        url = "https://www.alphavantage.co/query"
-        params = {
-            "function": "TIME_SERIES_DAILY",
-            "symbol": symbol,
-            "outputsize": "compact",  # last 100 days, use 'full' for more
-            "apikey": api_key
-        }
-        response = requests.get(url, params=params)
-        data = response.json()
-        # Optional: handle errors or check if key exists
-        if "Time Series (Daily)" in data:
-            return data["Time Series (Daily)"]
-        else:
-            raise ValueError(f"Error fetching data: {data.get('Note') or data.get('Error Message') or data}")
+# I can also use a class and not have any member functions because with langchain tools it gets depreciated
+# Right now I am using the class so I can import the class from the crew.py becuase Idk if this will have somehting wrong 
+
+#class AlphaVantageTool(): 
+@tool("Fetch the daily S&P data")
+def get_daily_stock_data(symbol):
+    """Fetch daily OHLC data for a given stock symbol using Alpha Vantage API directly."""
+    api_key = os.environ['ALPHA_VANTAGE_API_KEY']
+    url = "https://www.alphavantage.co/query"
+    params = {
+        "function": "TIME_SERIES_DAILY",
+        "symbol": symbol,
+        "outputsize": "compact",  # last 100 days, use 'full' for more
+        "apikey": api_key
+    }
+    response = requests.get(url, params=params)
+    data = response.json()
+    # Optional: handle errors or check if key exists
+    if "Time Series (Daily)" in data:
+        return data["Time Series (Daily)"]
+    else:
+        raise ValueError(f"Error fetching data: {data.get('Note') or data.get('Error Message') or data}")
 
 
 if __name__ == "__main__":
-    client = AlphaVantageTool()  
-    daily_data = client.get_daily_stock_data("SPY") 
-    print("First 3 days of data:")
+    #client = AlphaVantageTool()
+    daily_data = get_daily_stock_data.invoke("SPY") #client.get_daily_stock_data.invoke("SPY")
+    print("Last 3 days of data:")
     for date, ohlc in list(daily_data.items())[:3]:
         print(f"{date}: {ohlc}")

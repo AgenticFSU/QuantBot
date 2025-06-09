@@ -15,3 +15,28 @@ reporting_task:
     A fully fledged report with the main topics, each with a full section of information.
     Formatted as markdown without '```'
   agent: reporting_analyst
+
+
+financial_analysis_task:
+  description: >
+    Conduct an in-depth financial analysis of {ticker}, a constituent of the S&P 500. 
+    Evaluate its recent financial performance, revenue growth, profitability, balance sheet strength, and any notable risks or trends.
+    Consider recent earnings reports, news, macroeconomic factors, and analyst sentiment.
+  expected_output: >
+    A detailed financial summary of {ticker}, including:
+    - Key financial metrics (revenue, profit margin, EPS, etc.)
+    - Recent earnings highlights
+    - Strengths and weaknesses
+    - Growth potential and risk factors
+    - Analyst consensus and valuation insights
+  agent: financial_analyst
+
+
+market_prediction_task:
+  description: >
+    Use the latest technical indicators for {ticker} to predict the market movement for the next trading day.
+    Consider RSI, MACD, SMA, and volume trends from Alpha Vantage.
+  expected_output: >
+    A brief prediction: Bullish / Bearish / Sideways
+    Include reasoning using the indicators (e.g., RSI < 30 implies oversold).
+  agent: prediction_bot
