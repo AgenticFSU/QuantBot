@@ -33,7 +33,16 @@ To kickstart your crew of AI agents and begin task execution, run this from the 
 
 ```bash
 $ crewai run
+
+or 
+
+$ PYTHONPATH=src uv run run_crew  
 ```
+Sometimes I get this error and I have to use the second command 
+Traceback (most recent call last):
+  File "/Users/axelreich/Desktop/sp_stock_agent/src/sp_stock_agent/main.py", line 7, in <module>
+    from sp_stock_agent.crew import SpStockAgent
+ModuleNotFoundError: No module named 'sp_stock_agent'
 
 This command initializes the sp_stock_agent Crew, assembling the agents and assigning them tasks as defined in your configuration.
 

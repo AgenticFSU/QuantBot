@@ -1,25 +1,29 @@
 #!/usr/bin/env python
 import sys
+import os
 import warnings
 
 from datetime import datetime
 
 from sp_stock_agent.crew import SpStockAgent
 
+
+
 warnings.filterwarnings("ignore", category=SyntaxWarning, module="pysbd")
 
-# This main file is intended to be a way for you to run your
-# crew locally, so refrain from adding unnecessary logic into this file.
-# Replace with inputs you want to test with, it will automatically
-# interpolate any tasks and agents information
 
 def run():
     """
     Run the crew.
     """
     inputs = {
-        'topic': 'AI LLMs',
-        'current_year': str(datetime.now().year)
+        # I am pretty sure that these imputs are for the yaml {}
+        'topic': 'History of llms',
+        'current_year': str(datetime.now().year),
+        'ticker' : 'SPY',
+        # After this is called, the it passess it as a parameter to the funct in AVapitool
+        # Also it is being called as I refered it as a tool in crew.py
+        'symbol' : 'SPY'
     }
     
     try:
