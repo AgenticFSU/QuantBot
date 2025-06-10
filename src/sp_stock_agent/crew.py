@@ -5,7 +5,9 @@ from typing import List
 # If you want to run a snippet of code before or after the crew starts,
 # you can use the @before_kickoff and @after_kickoff decorators
 # https://docs.crewai.com/concepts/crews#example-crew-class-with-decorators
-from tools.alpha_vantage_api_tool import get_daily_stock_data
+
+from sp_stock_agent.tools.alpha_vantage_api_tool import StockDataTool
+
 
 #All of these imports are for the ones before the Class start 
 import os
@@ -68,14 +70,14 @@ class SpStockAgent():
         return Agent(
             config=self.agents_config["financial_analyst"],
             
-            tools= [get_daily_stock_data.invoke("SPY")], #I use the .invoke so that it does not confused langchain
+            tools=[StockDataTool()],  # Pass an instance of your tool
 
             llm=self.llm,
 			verbose=True,
 			max_iter=4,
 			allow_delegation=True
 
-            #Hard coded the SPY in the future we should implement it in the chat 
+            # The parameter of get_daily... I put it in the main as that is how is passed
         )
 
 
@@ -100,19 +102,19 @@ class SpStockAgent():
     @task 
     def financial_analysis_task(self) -> Task:
         return Task(
-            config=self.task_config['financial_analysis_task'],
+            config=self.tasks_config['financial_analysis_task'],
             ooutput_file='financial_repord.md',
-            agent=agent            #I dont know if this is needed 
+            agent=self.financial_analyst()           #I dont know if this is needed 
         )
 
 
-    @task
-    def market_prediction_task(self) -> Task:
-        return Task(
-            config=self.task_config['market_prediction_task'],
-            ooutput_file='market_prediction_task.md',
-            agent=agent            #I dont know if this is needed 
-        )
+    # @task
+    # def market_prediction_task(self) -> Task:
+    #     return Task(
+    #         config=self.task_config['market_prediction_task'],
+    #         ooutput_file='market_prediction_task.md',
+    #         agent=agent            #I dont know if this is needed 
+    #     )
 
     @crew
     def crew(self) -> Crew:

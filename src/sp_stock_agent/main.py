@@ -7,9 +7,6 @@ from datetime import datetime
 
 from sp_stock_agent.crew import SpStockAgent
 
-from pathlib import Path
-from dotenv import load_dotenv
-from langchain_openai import ChatOpenAI
 
 
 warnings.filterwarnings("ignore", category=SyntaxWarning, module="pysbd")
@@ -24,6 +21,8 @@ def run():
         'topic': 'History of llms',
         'current_year': str(datetime.now().year),
         'ticker' : 'SPY',
+        # After this is called, the it passess it as a parameter to the funct in AVapitool
+        # Also it is being called as I refered it as a tool in crew.py
         'symbol' : 'SPY'
     }
     

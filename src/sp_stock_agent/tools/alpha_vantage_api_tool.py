@@ -5,6 +5,10 @@ from langchain.tools import tool
 from dotenv import load_dotenv
 from pathlib import Path
 
+#Import so that the StockDataTool can inherit from the base class 
+from crewai.tools import BaseTool
+
+
 # Load .env from project root (3 levels up from this file)
 env_path = Path(__file__).resolve().parents[3] / '.env'
 load_dotenv(dotenv_path=env_path)
@@ -33,9 +37,12 @@ def get_daily_stock_data(symbol):
         raise ValueError(f"Error fetching data: {data.get('Note') or data.get('Error Message') or data}")
 
 
-if __name__ == "__main__":
-    #client = AlphaVantageTool()
-    daily_data = get_daily_stock_data.invoke("SPY") #client.get_daily_stock_data.invoke("SPY")
-    print("Last 3 days of data:")
-    for date, ohlc in list(daily_data.items())[:3]:
-        print(f"{date}: {ohlc}")
+class StockDataTool(BaseTool):
+    name: str = "get_daily_stock_data"
+    description: str = "Fetch daily OHLC data for a given stock symbol using Alpha Vantage API."
+
+    def _run(self, symbol: str) -> str:
+        try:
+            return get_daily_stock_data(symbol)
+        except Exception as e:
+            return f"Error fetching stock data: {str(e)}"

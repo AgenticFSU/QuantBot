@@ -32,11 +32,11 @@ financial_analysis_task:
   agent: financial_analyst
 
 
-market_prediction_task:
-  description: >
-    Use the latest technical indicators for {ticker} to predict the market movement for the next trading day.
-    Consider RSI, MACD, SMA, and volume trends from Alpha Vantage.
-  expected_output: >
-    A brief prediction: Bullish / Bearish / Sideways
-    Include reasoning using the indicators (e.g., RSI < 30 implies oversold).
-  agent: prediction_bot
+# market_prediction_task:
+#   description: >
+#     Use the latest technical indicators for {ticker} to predict the market movement for the next trading day.
+#     Consider RSI, MACD, SMA, and volume trends from Alpha Vantage.
+#   expected_output: >
+#     A brief prediction: Bullish / Bearish / Sideways
+#     Include reasoning using the indicators (e.g., RSI < 30 implies oversold).
+#   agent: prediction_bot
