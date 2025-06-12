@@ -103,8 +103,9 @@ class SpStockAgent():
     def financial_analysis_task(self) -> Task:
         return Task(
             config=self.tasks_config['financial_analysis_task'],
-            ooutput_file='financial_repord.md',
+            output_file='financial_repord.md',      
             agent=self.financial_analyst()           #I dont know if this is needed 
+            
         )
 
 

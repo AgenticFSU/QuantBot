@@ -18,8 +18,9 @@ def run():
     """
     inputs = {
         # I am pretty sure that these imputs are for the yaml {}
-        'topic': 'History of llms',
+        'topic': 'Roger Federer',
         'current_year': str(datetime.now().year),
+
         'ticker' : 'SPY',
         # After this is called, the it passess it as a parameter to the funct in AVapitool
         # Also it is being called as I refered it as a tool in crew.py
