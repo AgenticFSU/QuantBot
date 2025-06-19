@@ -17,14 +17,10 @@ def run():
     Run the crew.
     """
     inputs = {
-        # I am pretty sure that these imputs are for the yaml {}
-        'topic': 'Roger Federer',
-        'current_year': str(datetime.now().year),
+        # These are the inputs for the yaml files that can be added if we use a {}
 
-        'ticker' : 'SPY',
-        # After this is called, the it passess it as a parameter to the funct in AVapitool
-        # Also it is being called as I refered it as a tool in crew.py
-        'symbol' : 'SPY'
+         'ticker' : 'SPY',
+         'symbol' : 'SPY'
     }
     
     try:

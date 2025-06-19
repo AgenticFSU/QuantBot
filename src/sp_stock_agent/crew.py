@@ -51,24 +51,12 @@ class SpStockAgent():
     def __init__(self):
         self.llm = agent_llm    #Ollama(model=os.environ['MODEL'])lama(model=os.environ['MODEL'])
 
-    @agent
-    def researcher(self) -> Agent:
-        return Agent(
-            config=self.agents_config['researcher'], # type: ignore[index]
-            verbose=True
-        )
-
-    @agent
-    def reporting_analyst(self) -> Agent:
-        return Agent(
-            config=self.agents_config['reporting_analyst'], # type: ignore[index]
-            verbose=True
-        )
     
     @agent 
-    def financial_analyst(self) -> Agent:
+    def final_decision(self) -> Agent:
         return Agent(
-            config=self.agents_config["financial_analyst"],
+            #This line calls the agent of final decision
+            config=self.agents_config["final_decision"],
             
             tools=[StockDataTool()],  # Pass an instance of your tool
 
@@ -76,8 +64,6 @@ class SpStockAgent():
 			verbose=True,
 			max_iter=4,
 			allow_delegation=True
-
-            # The parameter of get_daily... I put it in the main as that is how is passed
         )
 
 
@@ -85,43 +71,21 @@ class SpStockAgent():
     # To learn more about structured task outputs,
     # task dependencies, and task callbacks, check out the documentation:
     # https://docs.crewai.com/concepts/tasks#overview-of-a-task
-    @task
-    def research_task(self) -> Task:
-        return Task(
-            config=self.tasks_config['research_task'], # type: ignore[index]
-        )
 
-
-    @task
-    def reporting_task(self) -> Task:
-        return Task(
-            config=self.tasks_config['reporting_task'], # type: ignore[index]
-            output_file='report.md'
-        )
 
     @task 
-    def financial_analysis_task(self) -> Task:
+    def final_decision_task(self) -> Task:
         return Task(
-            config=self.tasks_config['financial_analysis_task'],
+            config=self.tasks_config['final_decision_task'],
             output_file='financial_repord.md',      
-            agent=self.financial_analyst()           #I dont know if this is needed 
+            agent=self.final_decision()         # This is needed to link the task and the agents
             
         )
 
 
-    # @task
-    # def market_prediction_task(self) -> Task:
-    #     return Task(
-    #         config=self.task_config['market_prediction_task'],
-    #         ooutput_file='market_prediction_task.md',
-    #         agent=agent            #I dont know if this is needed 
-    #     )
-
+    # Initializing the crew and then calling it in main
     @crew
     def crew(self) -> Crew:
-        """Creates the SpStockAgent crew"""
-        # To learn how to add knowledge sources to your crew, check out the documentation:
-        # https://docs.crewai.com/concepts/knowledge#what-is-knowledge
 
         return Crew(
             agents=self.agents, # Automatically created by the @agent decorator
