@@ -7,6 +7,7 @@ from typing import List
 # https://docs.crewai.com/concepts/crews#example-crew-class-with-decorators
 
 from sp_stock_agent.tools.alpha_vantage_api_tool import StockDataTool
+from sp_stock_agent.tools.sec_10k_tool import SEC10KSummaryTool
 
 
 #All of these imports are for the ones before the Class start 
@@ -51,6 +52,7 @@ class SpStockAgent():
     def __init__(self):
         self.llm = agent_llm    #Ollama(model=os.environ['MODEL'])lama(model=os.environ['MODEL'])
 
+    """
     @agent
     def researcher(self) -> Agent:
         return Agent(
@@ -64,13 +66,13 @@ class SpStockAgent():
             config=self.agents_config['reporting_analyst'], # type: ignore[index]
             verbose=True
         )
-    
+   """ 
     @agent 
     def financial_analyst(self) -> Agent:
         return Agent(
             config=self.agents_config["financial_analyst"],
             
-            tools=[StockDataTool()],  # Pass an instance of your tool
+            tools=[StockDataTool(), SEC10KSummaryTool()],  # Pass an instance of your tool
 
             llm=self.llm,
 			verbose=True,
@@ -85,6 +87,7 @@ class SpStockAgent():
     # To learn more about structured task outputs,
     # task dependencies, and task callbacks, check out the documentation:
     # https://docs.crewai.com/concepts/tasks#overview-of-a-task
+    """
     @task
     def research_task(self) -> Task:
         return Task(
@@ -98,12 +101,12 @@ class SpStockAgent():
             config=self.tasks_config['reporting_task'], # type: ignore[index]
             output_file='report.md'
         )
-
+    """
     @task 
     def financial_analysis_task(self) -> Task:
         return Task(
             config=self.tasks_config['financial_analysis_task'],
-            ooutput_file='financial_repord.md',
+            output_file='financial_report.md',
             agent=self.financial_analyst()           #I dont know if this is needed 
         )
 

@@ -18,12 +18,12 @@ def run():
     """
     inputs = {
         # I am pretty sure that these imputs are for the yaml {}
-        'topic': 'History of llms',
-        'current_year': str(datetime.now().year),
-        'ticker' : 'SPY',
+        #'topic': 'Quantum Computing Companies Profitability',
+        #'current_year': str(datetime.now().year),
+        'ticker' : 'MSFT',
         # After this is called, the it passess it as a parameter to the funct in AVapitool
         # Also it is being called as I refered it as a tool in crew.py
-        'symbol' : 'SPY'
+        'symbol' : 'MSFT'
     }
     
     try:
@@ -37,7 +37,7 @@ def train():
     Train the crew for a given number of iterations.
     """
     inputs = {
-        "topic": "AI LLMs",
+        "topic": "Quantum Computing Companies Profitability",
         'current_year': str(datetime.now().year)
     }
     try:
@@ -61,7 +61,7 @@ def test():
     Test the crew execution and returns the results.
     """
     inputs = {
-        "topic": "AI LLMs",
+        "topic": "Quantum Computing Companies Profitability",
         "current_year": str(datetime.now().year)
     }
     
