@@ -7,6 +7,7 @@ from typing import List
 # https://docs.crewai.com/concepts/crews#example-crew-class-with-decorators
 
 from sp_stock_agent.tools.alpha_vantage_api_tool import StockDataTool
+from sp_stock_agent.tools.sec_10k_tool import SEC10KSummaryTool
 
 
 #All of these imports are for the ones before the Class start 
@@ -58,7 +59,7 @@ class SpStockAgent():
             #This line calls the agent of final decision
             config=self.agents_config["final_decision"],
             
-            tools=[StockDataTool()],  # Pass an instance of your tool
+            tools=[StockDataTool(), SEC10KSummaryTool()],  # Pass an instance of your tool
 
             llm=self.llm,
 			verbose=True,
