@@ -1,17 +1,25 @@
-research_task:
-  description: >
-    Conduct a thorough research about {topic}
-    Make sure you find any interesting and relevant information given
-    the current year is {current_year}.
-  expected_output: >
-    A list with 10 bullet points of the most relevant information about {topic}
-  agent: researcher
+# financial_analysis_task:
+#   description: >
+#     Conduct an in-depth financial analysis of {ticker}, a constituent of the S&P 500. 
+#     Evaluate its recent financial performance, revenue growth, profitability, balance 
+#     sheet strength, and any notable risks or trends. Consider recent earnings reports, 
+#     news, macroeconomic factors, and analyst sentiment.
+#   expected_output: >
+#     Conduct an in-depth financial analysis of {ticker}, a constituent of the S&P 500. 
+#     Consider recent earnings reports, news, macroeconomic factors, and analyst
+#     sentiment. At the end, provide a clear recommendation: "Yes, invest" or "No, 
+#     do not invest", and summarize your reasoning.
+#   agent: financial_analyst
 
-reporting_task:
+
+
+final_decision_task:
   description: >
-    Review the context you got and expand each topic into a full section for a report.
-    Make sure the report is detailed and contains any and all relevant information.
+    Based on all the financial analyst outputs for each stock, compare their findings and 
+    decide which stock(s) present the most promising investment opportunity for tomorrow. 
+    Consider trends, volume, recent price movement, and the confidence in each analyst’s prediction.
   expected_output: >
-    A fully fledged report with the main topics, each with a full section of information.
-    Formatted as markdown without '```'
-  agent: reporting_analyst
+    A clear and actionable investment recommendation. Specify one or more stocks to invest in,
+    and justify your decision based on the analyst insights, technical patterns, and short-term expectations.
+    Conclude whether each recommended stock is expected to go up or down.
+  agent: final_decision
