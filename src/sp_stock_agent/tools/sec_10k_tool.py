@@ -20,8 +20,6 @@ def get_cik_from_symbol(symbol: str) -> str:
             return f"{cik_int:010d}"
 
     raise ValueError(f"CIK not found for symbol: {symbol}")
-
-
 def get_10k_url(symbol: str) -> str:
     """
     Retrieve the latest 10-K filing URL for the given stock symbol.
