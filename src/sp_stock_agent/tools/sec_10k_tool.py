@@ -2,7 +2,6 @@ import json
 import os
 import requests
 from crewai.tools import BaseTool
-from bs4 import BeautifulSoup
 
 CIK_JSON_PATH = os.path.join(os.path.dirname(__file__), 'cik.json')
 
@@ -20,49 +19,6 @@ def get_cik_from_symbol(symbol: str) -> str:
             return f"{cik_int:010d}"
 
     raise ValueError(f"CIK not found for symbol: {symbol}")
-def get_10k_url(symbol: str) -> str:
-    """
-    Retrieve the latest 10-K filing URL for the given stock symbol.
-    """
-    try:
-        cik = get_cik_from_symbol(symbol)
-        print(f"[INFO] Fetching 10-K for: {symbol} (CIK: {cik})")
-
-        headers = {
-            "User-Agent": "Jacob Proenza jcproenzasmith@gmail.com",
-            "Accept-Encoding": "gzip, deflate",
-            "Host": "data.sec.gov"
-        }
-
-        url = f"https://data.sec.gov/submissions/CIK{cik}.json"
-        response = requests.get(url, headers=headers)
-        response.raise_for_status()
-
-        data = response.json()
-        recent = data.get("filings", {}).get("recent", {})
-        forms = recent.get("form", [])
-        accession_numbers = recent.get("accessionNumber", [])
-
-        access = None
-        for form, acc_no in zip(forms, accession_numbers):
-            if "10-K" in form.upper():
-                access = acc_no
-                break
-
-        if not access:
-            raise Exception("No 10-K filing found.")
-
-        access_no_nodash = access.replace('-', '')
-        #cik_int = str(int(cik))  # remove leading zeros
-        #url = f"https://www.sec.gov/Archives/edgar/data/{cik_int}/{access_no_nodash}/{access}-index.htm"
-
-        return access_no_nodash
-
-    except Exception as e:
-        print(f"Error fetching 10-K data for {symbol}: {e}")
-        return None
-    
-
 
 class SEC10KSummaryTool(BaseTool):
     name: str = "get_10k_data"
@@ -121,6 +77,6 @@ class SEC10KSummaryTool(BaseTool):
 
 # Example usage
 if __name__ == "__main__":
-    url = get_10k_url("MSFT")
+    url = SEC10KSummaryTool()._run("MSFT")
     if url:
         print("[SUCCESS] 10-K URL:", url)
