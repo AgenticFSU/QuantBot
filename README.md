@@ -4,7 +4,7 @@ Welcome to the SpStockAgent Crew project, powered by [crewAI](https://crewai.com
 
 ## Installation
 
-Ensure you have Python >=3.10 <3.14 installed on your system. This project uses [UV](https://docs.astral.sh/uv/) for dependency management and package handling, offering a seamless setup and execution experience.
+Ensure you have Python >=3.10 installed. This project uses [UV](https://docs.astral.sh/uv/) for dependency management and package handling, offering a seamless setup and execution experience.
 
 First, if you haven't already, install uv:
 
@@ -15,9 +15,11 @@ pip install uv
 Next, navigate to your project directory and install the dependencies:
 
 (Optional) Lock the dependencies and install them by using the CLI command:
+
 ```bash
 crewai install
 ```
+
 ### Customizing
 
 **Add your `OPENAI_API_KEY` into the `.env` file**
@@ -32,17 +34,13 @@ crewai install
 To kickstart your crew of AI agents and begin task execution, run this from the root folder of your project:
 
 ```bash
+$ uv pip install -e .
 $ crewai run
 
 or 
 
-$ PYTHONPATH=src uv run run_crew  
+$ uv run run_crew  
 ```
-Sometimes I get this error and I have to use the second command 
-Traceback (most recent call last):
-  File "/Users/axelreich/Desktop/sp_stock_agent/src/sp_stock_agent/main.py", line 7, in <module>
-    from sp_stock_agent.crew import SpStockAgent
-ModuleNotFoundError: No module named 'sp_stock_agent'
 
 This command initializes the sp_stock_agent Crew, assembling the agents and assigning them tasks as defined in your configuration.
 
@@ -55,6 +53,7 @@ The sp_stock_agent Crew is composed of multiple AI agents, each with unique role
 ## Support
 
 For support, questions, or feedback regarding the SpStockAgent Crew or crewAI.
+
 - Visit our [documentation](https://docs.crewai.com)
 - Reach out to us through our [GitHub repository](https://github.com/joaomdmoura/crewai)
 - [Join our Discord](https://discord.com/invite/X4JWnZnxPb)
