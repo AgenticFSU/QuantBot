@@ -1,1 +1,0 @@
-Based on the analysis of the daily OHLC data for AAPL, MSFT, and GOOGL, considering trends, volume, and recent price movement, I recommend investing in AAPL due to its consistent upward trend, higher trading volume, and recent price increase compared to MSFT and GOOGL.

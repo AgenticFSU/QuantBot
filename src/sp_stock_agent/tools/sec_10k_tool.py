@@ -1,82 +1,93 @@
 import json
 import os
-import requests
+import sec_parser as sp
 from crewai.tools import BaseTool
+from sec_downloader import Downloader
 
-CIK_JSON_PATH = os.path.join(os.path.dirname(__file__), 'cik.json')
-
-def get_cik_from_symbol(symbol: str) -> str:
-    """
-    Look up the CIK for a given stock ticker symbol from cik.json.
-    Pads it with leading zeros to 10 digits.
-    """
-    with open(CIK_JSON_PATH, 'r') as f:
-        data = json.load(f)
-
-    for entry in data.values():
-        if entry["ticker"].lower() == symbol.lower():
-            cik_int = int(entry["cik_str"])
-            return f"{cik_int:010d}"
-
-    raise ValueError(f"CIK not found for symbol: {symbol}")
+def level_to_markdown(level: int) -> str:
+    return "#" * (level + 1) if level <= 5 else ""
 
 class SEC10KSummaryTool(BaseTool):
-    name: str = "get_10k_data"
-    description: str = "Fetch the latest 10-K filing for the given stock symbol"
+    name: str = "get_10k_risk_factors_as_json"
+    description: str = (
+        "Fetch, parse, and extract 'Item 1A' (Risk Factors) "
+        "from the latest 10-K filing for a given stock symbol. "
+        "Returns the data as a hierarchical JSON object."
+    )
 
-    def _run(self, symbol: str) -> str:
-                
-        CIK = get_cik_from_symbol(symbol)  # Microsoft; change this to another CIK if needed
-        USER_AGENT = "Your Name your.email@example.com"  # <-- Use your real info!
+    def _run(self, symbol: str) -> dict:
+        # Define cache directory and file path
+        cache_dir = os.path.join("data", "10K")
+        os.makedirs(cache_dir, exist_ok=True)
+        file_path = os.path.join(cache_dir, f"{symbol}_10k.html")
 
-        # === STEP 1: Download submissions JSON ===
-        submissions_url = f"https://data.sec.gov/submissions/CIK{CIK}.json"
-        headers = {"User-Agent": USER_AGENT}
+        if os.path.exists(file_path):
+            print(f"Loading from cache: {file_path}")
+            # Load from cache
+            with open(file_path, "r") as f:
+                html = f.read()
+        else:
+            print(f"Downloading from SEC: {file_path}")
+            # Initialize the downloader with a generic user-agent
+            dl = Downloader("MyCompanyName", "email@example.com")
+            # Download the latest 10-K filing for the given stock symbol
+            html = dl.get_filing_html(ticker=symbol, form="10-K")
+            # Save to cache
+            try:
+                with open(file_path, "wb") as f:
+                    f.write(html)
+            except Exception as e:
+                print(f"Error saving to cache: {e}")
+                # Delete the file if it was created
+                if os.path.exists(file_path):
+                    try:
+                        os.remove(file_path)
+                    except Exception as e:
+                        print(f"Error deleting file {file_path}: {e}")
+        
+        elements = sp.Edgar10KParser().parse(html)
+        tree = sp.TreeBuilder().build(elements)
+        top_level_sections = [
+            item for part in tree for item in part.children
+        ]
 
-        print(f"Fetching submissions JSON for CIK {CIK}...")
-        resp = requests.get(submissions_url, headers=headers)
-        resp.raise_for_status()
-        data = resp.json()
 
-        # === STEP 2: Find the latest 10-K filing ===
-        recent = data['filings']['recent']
-        forms = recent['form']
-        accessions = recent['accessionNumber']
-        documents = recent['primaryDocument']
+        # Define titles to search for
+        # TODO: Parameterizing required for section selection based on user prompt.
+        # TODO: Advanced chunking and sorting approach needed.
+        target_sections = {"item 7a"}
+        # Find matching sections
 
-        try:
-            idx = forms.index("10-K")
-        except ValueError:
-            raise Exception("No 10-K filing found in recent filings.")
+        markdown = ""
+        for section in top_level_sections:
+            section_text = section.semantic_element.text.lower().strip()
+            if any(section_text.startswith(title) for title in target_sections):
+                markdown += f"# {section.semantic_element.text}\n"
+                for node in section.get_descendants():
+                    element = node.semantic_element
+                    if isinstance(element, sp.TextElement):
+                        txt = element.text
+                        if len(txt) > 1000:
+                            # TODO: Need advanced approach to summarize long text, possibly as another agent and tool.
+                            # Current approach simply truncates long text.
+                            markdown += f"{element.text[:800]}...\n"
+                        else:
+                            markdown += f"{element.text}\n"
 
-        accession = accessions[idx].replace("-", "")
-        primary_doc = documents[idx]
-        cik_no_leading_zeros = str(int(CIK))  # Remove leading zeros
+                    elif isinstance(element, sp.TitleElement):
+                        markdown += f"{level_to_markdown(element.level)} {element.text}\n"
+                    elif isinstance(element, sp.TableElement):
+                        markdown += f"{element.table_to_markdown()}\n"
 
-        print(f"Latest 10-K accession: {accessions[idx]}")
-        print(f"Primary document: {primary_doc}")
-
-        # === STEP 3: Build document URL ===
-        doc_url = (
-            f"https://www.sec.gov/Archives/edgar/data/"
-            f"{cik_no_leading_zeros}/{accession}/{primary_doc}"
-        )
-        print(f"10-K document URL: {doc_url}")
-
-        # === STEP 4: Download the 10-K document ===
-        output_filename = f"{cik_no_leading_zeros}-10k-{accessions[idx]}.html"
-        print(f"Downloading 10-K document to {output_filename}...")
-        doc_resp = requests.get(doc_url, headers=headers)
-        doc_resp.raise_for_status()
-
-        with open(output_filename, "wb") as f:
-            f.write(doc_resp.content)
-
-        print("Done!")
+        os.makedirs("data/generated", exist_ok=True)
+        with open(f"data/generated/{symbol}_10k_parsed.md", "w") as f:
+            f.write(markdown)
+        return markdown
 
 
 # Example usage
 if __name__ == "__main__":
-    url = SEC10KSummaryTool()._run("MSFT")
-    if url:
-        print("[SUCCESS] 10-K URL:", url)
+    tool = SEC10KSummaryTool()
+    result = tool._run("MSFT")
+    print(json.dumps(result, indent=2))
+    

@@ -9,31 +9,7 @@ from typing import List
 from sp_stock_agent.tools.alpha_vantage_api_tool import StockDataTool
 from sp_stock_agent.tools.sec_10k_tool import SEC10KSummaryTool
 
-
-#All of these imports are for the ones before the Class start 
-import os
-from pathlib import Path
-from dotenv import load_dotenv
-from langchain_openai import ChatOpenAI
-
-from langchain_openai import ChatOpenAI
-
-agent_llm = ChatOpenAI(temperature=0, model='gpt-3.5-turbo')
-
-
-env_path = Path(__file__).resolve().parents[2] / '.env'
-load_dotenv(dotenv_path=env_path)
-
-openai_api_key = os.getenv("OPENAI_API_KEY")
-
-if not openai_api_key:
-    raise ValueError("OPENAI_API_KEY is not set in your environment or .env file.")
-
-llm = ChatOpenAI(
-    temperature=0,
-    model="gpt-3.5-turbo",
-    openai_api_key=openai_api_key
-)
+from .llms import gpt_4o, gpt_3_5_turbo, gpt_o4_mini
 
 @CrewBase
 class SpStockAgent():
@@ -50,8 +26,8 @@ class SpStockAgent():
     # https://docs.crewai.com/concepts/agents#agent-tools
 
     def __init__(self):
-        self.llm = agent_llm    #Ollama(model=os.environ['MODEL'])lama(model=os.environ['MODEL'])
-
+        self.llm = gpt_3_5_turbo
+        
     
     @agent 
     def final_decision(self) -> Agent:
@@ -78,7 +54,7 @@ class SpStockAgent():
     def final_decision_task(self) -> Task:
         return Task(
             config=self.tasks_config['final_decision_task'],
-            output_file='financial_repord.md',      
+            output_file='data/generated/financial_repord.md',      
             agent=self.final_decision()         # This is needed to link the task and the agents
             
         )
@@ -93,7 +69,7 @@ class SpStockAgent():
             tasks=self.tasks, # Automatically created by the @task decorator
             process=Process.hierarchical,
             verbose=True,
-            manager_llm=llm,
+            manager_llm=gpt_3_5_turbo,
             memory=True
             # process=Process.hierarchical, # In case you wanna use that instead https://docs.crewai.com/how-to/Hierarchical/
         )
