@@ -21,3 +21,5 @@ final_decision_task:
 
   expected_output: >
     A markdown-formatted investment recommendation for AAPL based on stock trends.
+
+  agent: final_decision

@@ -2,19 +2,16 @@ import json
 import os
 import requests
 
-from typing import Type
+from typing import Union, List, Type
 from pydantic import BaseModel, Field
 from typing import List, Type
-
 
 
 # Import so that the FetchStockSummaryTool can inherit from the base class 
 from crewai.tools import BaseTool
 
 class StockInput(BaseModel):
-    symbol: str = Field(..., description="The stock ticker symbol like AAPL, MSFT, or TSLA")
-
-
+    symbol: Union[str, List[str]] = Field(..., description="A single stock symbol or a list like ['AAPL', 'MSFT']")
 
 
 #PROBLEM: There is a limit of 75 calls per minute in av api and also when we feed a lot of info to the AI it breaks, it says that there is a lot of input 
@@ -25,7 +22,7 @@ class FetchStockSummaryTool(BaseTool):
 
     args_schema: Type[BaseModel] = StockInput
 
-    def fetch_single_stock(self, symbol: str, api_key: str)-> dict[str, any]:
+    def fetch_single_stock(self, symbol: str, api_key: str) -> dict:
         """Fetch data for a single stock symbol."""
 
         url = "https://www.alphavantage.co/query"
@@ -98,10 +95,14 @@ class FetchStockSummaryTool(BaseTool):
         
         return all_stock_data
 
-    def _run(self, symbol: List[str]) -> str:
+    def _run(self, symbol: Union[str, List[str]]) -> str:
         try:
-            result = self.return_all_stock_data(symbol)
-            return json.dumps(result)  # Return as JSON string
+            symbols = [symbol] if isinstance(symbol, str) else symbol
+            result = self.return_all_stock_data(symbols)
+            return json.dumps(result, indent=2)
+        
+        except Exception as e:
+            return f"Error fetching stock data: {str(e)}"
                 
         except Exception as e:
             return f"Error fetching stock data: {str(e)}"
