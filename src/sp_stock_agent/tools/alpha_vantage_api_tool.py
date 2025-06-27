@@ -1,30 +1,46 @@
 import json
+import logging
 import os
 import requests
-import pandas as pd
-# Import so that the StockDataTool can inherit from the base class 
+
+from typing import Union, List, Type
+from pydantic import BaseModel, Field
+
+
+# Import so that the FetchStockSummaryTool can inherit from the base class 
 from crewai.tools import BaseTool
 
-# This is in case I want to get all the tickers but for now we are using the sp_500 symbols, which is a short list 
-def get_sp500_tickers():
-    url = "https://en.wikipedia.org/wiki/List_of_S%26P_500_companies"
-    tables = pd.read_html(url)
-    sp500_table = tables[0]  # The first table contains the tickers
-    tickers = sp500_table["Symbol"].tolist()
+# Ensure logs directory exists BEFORE configuring logging
+os.makedirs('logs', exist_ok=True)
 
-    # Fix tickers like "BRK.B" to "BRK-B" (Alpha Vantage format)
-    tickers = [t.replace(".", "-") for t in tickers]
+# Configure logger for this module
+logger = logging.getLogger(__name__)
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('logs/alpha_vantage_tool.log'),
+        logging.StreamHandler()
+    ]
+)
 
-    return tickers
+class StockInput(BaseModel):
+    symbol: Union[str, List[str]] = Field(..., description="A single stock symbol or a list like ['AAPL', 'MSFT']")
+
 
 #PROBLEM: There is a limit of 75 calls per minute in av api and also when we feed a lot of info to the AI it breaks, it says that there is a lot of input 
-class StockDataTool(BaseTool):
+class FetchStockSummaryTool(BaseTool):
+    name: str = "fetch_stock_summary"
+    description: str = (
+        "Fetches a 5-day summary of recent OHLC stock data for given ticker(s) "
+        "(e.g. [AAPL, TSLA] or [AAPL]). "
+        "Returns close price, volume, and highs/lows."
+    )
+    args_schema: Type[BaseModel] = StockInput
 
-    name: str = "get_daily_stock_data"
-    description: str = "Fetch daily OHLC data for a given stock symbol using Alpha Vantage API."
-
-    def fetch_single_stock_data(self, symbol: str, api_key: str)-> dict[str, any]:
+    def fetch_single_stock(self, symbol: str, api_key: str) -> dict:
         """Fetch data for a single stock symbol."""
+        logger.info(f"Fetching stock data for symbol: {symbol}")
 
         url = "https://www.alphavantage.co/query"
         params = {
@@ -60,54 +76,60 @@ class StockDataTool(BaseTool):
                         "volume": int(values["5. volume"])
                     }
 
+                logger.info(f"Successfully fetched data for {symbol}")
                 return formatted_data
         
             else:
-                raise ValueError(f"Error fetching data: {data.get('Note') or data.get('Error Message') or data}")
+                error_msg = f"Error fetching data for {symbol}: {data.get('Note') or data.get('Error Message') or data}"
+                logger.error(error_msg)
+                raise ValueError(error_msg)
 
         except Exception as e:
-            print(f"Request error for {symbol}: {str(e)}")
+            logger.error(f"Request error for {symbol}: {str(e)}")
             return None
 
 
-    def get_sp500_stock_data(self):
-        """Fetch daily OHLC data for all S&P 500 stocks, returning the latest 5 days for each symbol."""
-        
-        # Instead of this I could call the function get_sp500_tickers to get a list from the wikipedia but for testing purposes I will leave this one for now 
-        sp500_symbols = [
-            "AAPL", "MSFT", "GOOGL",
-        ]
-        
+    # We dont know what will be passed if either a list or just a symbol 
+    def return_all_stock_data(self, symbols):
+        """Fetch and store summarized data for all passed symbols."""
+        logger.info(f"Starting to fetch data for {len(symbols)} symbols: {symbols}")
+
         api_key = os.environ['ALPHA_VANTAGE_API_KEY']
         all_stock_data = {}
         
-        for symbol in sp500_symbols:
+        for symbol in symbols:
             try:
                 # Fetch data for each symbol
-                stock_data = self.fetch_single_stock_data(symbol, api_key)
+                stock_data = self.fetch_single_stock(symbol, api_key)
 
                 if stock_data:
                     all_stock_data[symbol] = stock_data
-                    print(f"✓ Fetched data for {symbol}")
+                    logger.info(f"✓ Fetched data for {symbol}")
                 else:
-                    print(f"✗ Failed to fetch data for {symbol}")
+                    logger.warning(f"✗ Failed to fetch data for {symbol}")
                     
             except Exception as e:
-                print(f"✗ Error fetching {symbol}: {str(e)}")
+                logger.error(f"✗ Error fetching {symbol}: {str(e)}")
+
                 # Continue with next symbol instead of failing completely
                 continue
         
+        logger.info(f"Completed fetching data for {len(all_stock_data)} out of {len(symbols)} symbols")
         return all_stock_data
 
-    def _run(self, symbol: str) -> str:
+    def _run(self, symbol: Union[str, List[str]]) -> str:
         try:
-            result = self.get_sp500_stock_data()
-            return json.dumps(result)  # Return as JSON string
-            #return get_daily_stock_data(symbol)
+            symbols = [symbol] if isinstance(symbol, str) else symbol
+            result = self.return_all_stock_data(symbols)
+            return json.dumps(result, indent=2)
+        
         except Exception as e:
-            return f"Error fetching stock data: {str(e)}"
+            error_msg = f"Error fetching stock data: {str(e)}"
+            logger.error(error_msg)
+            return error_msg
+
 
 #Test it locally in the file
 if __name__ == "__main__":
-    data = StockDataTool().get_sp500_stock_data() # Empty input for no-arg function
+    data = FetchStockSummaryTool().return_all_stock_data() # Empty input for no-arg function
     print(json.dumps(data, indent=2))

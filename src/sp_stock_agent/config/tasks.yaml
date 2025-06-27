@@ -13,13 +13,14 @@
 
 
 
+# OPTIMIZE: I have to put the tickers for each companie that I want in the prompt. We need to change this for the future.
 final_decision_task:
   description: >
-    Based on all the financial analyst outputs for each stock, compare their findings and 
-    decide which stock(s) present the most promising investment opportunity for tomorrow. 
-    Consider trends, volume, recent price movement, and the confidence in each analyst’s prediction.
+    Use your stock analysis tool to evaluate AAPL, TSLA, MSFT, META. Summarize the recent 5-day performance.
+    Your final answer MUST include a recommendation about whether or not to invest in these stocks,
+    and a short explanation based on its recent OHLC movement.
+
   expected_output: >
-    A clear and actionable investment recommendation. Specify one or more stocks to invest in,
-    and justify your decision based on the analyst insights, technical patterns, and short-term expectations.
-    Conclude whether each recommended stock is expected to go up or down.
+    A markdown-formatted investment recommendation for these companies that I mentioned based on stock trends.
+
   agent: final_decision
