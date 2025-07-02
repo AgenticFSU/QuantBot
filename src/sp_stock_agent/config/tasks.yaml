@@ -24,3 +24,4 @@ final_decision_task:
     A markdown-formatted investment recommendation for these companies that I mentioned based on stock trends.
 
   agent: final_decision
+
