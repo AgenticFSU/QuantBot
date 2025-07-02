@@ -9,7 +9,7 @@ that help us for scraping news articles"""
 
 def fetch_articles_with_keyword(keyword, num_results=5):
 
-    """Smart Google query with inurl, intitle, and keyword filtering. I can also add
+    """Google query with inurl, intitle, and keyword filtering. I can also add
        onsite: and add the sites that we prefer to find"""
     
     preferred_sites = ["cnn.com"]
@@ -19,18 +19,22 @@ def fetch_articles_with_keyword(keyword, num_results=5):
     results = []
 
     try:
-        links = search(search_query, num_results=num_results)
+        # fetch 3x as many links as desired articles as not all of them will be successfult links 
+        links = list(search(search_query, num_results=num_results*3))
     except Exception as e:
         print(f"Error during Google search: {e}")
         return []
 
-    for link in links:
+    i = 0
+    while i < len(links) and len(results) < num_results:
+        link = links[i]
+        i += 1
+
         if any(bad in link for bad in ["cnn-underscored", "bloomberg.com", "marketwatch.com", "yahoo.com"]):
             print(f"Skipping blocked URL: {link}")
             continue
 
-
-        if keyword.lower() not in link.lower():  # filter by keyword in URL
+        if keyword.lower() not in link.lower():
             continue
 
         try:
@@ -41,16 +45,17 @@ def fetch_articles_with_keyword(keyword, num_results=5):
                 results.append({
                     'title': article.title,
                     'url': link,
-                    'summary': article.summary
+                    'summary': article.summary if article.summary else article.text[:300]
                 })
-
         except Exception as e:
             print(f"Failed to process article at {link}: {e}")
+            continue
+
     return results
 
 if __name__ == "__main__":
     keyword = "Apple"
-    num_results = 20
+    num_results = 5
 
     articles = fetch_articles_with_keyword(keyword, num_results)
 
