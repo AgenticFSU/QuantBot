@@ -8,6 +8,7 @@ from typing import List
 
 from sp_stock_agent.tools.alpha_vantage_api_tool import StockDataTool
 from sp_stock_agent.tools.sec_10k_tool import SEC10KSummaryTool
+from sp_stock_agent.tools.news_scraper_tool import NewsImpactTool
 
 from .llms import gpt_4o, gpt_3_5_turbo, gpt_o4_mini
 
@@ -35,7 +36,7 @@ class SpStockAgent():
             #This line calls the agent of final decision
             config=self.agents_config["final_decision"],
             
-            tools=[StockDataTool(), SEC10KSummaryTool()],  # Pass an instance of your tool
+            tools=[StockDataTool(), SEC10KSummaryTool(), NewsImpactTool()],  # Pass an instance of your tool
 
             llm=self.llm,
 			verbose=True,
