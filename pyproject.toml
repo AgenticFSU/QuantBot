@@ -3,12 +3,13 @@ name = "sp_stock_agent"
 version = "0.1.0"
 description = "sp_stock_agent using crewAI"
 authors = [{ name = "Your Name", email = "you@example.com" }]
-requires-python = ">=3.10,<3.14"
+requires-python = ">=3.12,<3.14"
 dependencies = [
     "crewai[tools]>=0.126.0,<1.0.0",
     "pydantic>=2.11.5",
     "requests>=2.32.3",
     "sec-parser @ git+https://github.com/alphanome-ai/sec-parser.git",
+    "rag @ git+https://github.com/AgenticFSU/SimpleRAG.git",
 ]
 
 [project.scripts]
