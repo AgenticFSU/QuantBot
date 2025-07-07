@@ -1,10 +1,22 @@
-# QuantBot - Stock Analysis Agent
+# QuantBot - Automated Financial Intelligence System
 
-QuantBot is an AI-powered stock analysis system built using the crewAI framework. It analyzes S&P 500 stocks using financial data and provides investment recommendations based on recent market performance.
+QuantBot is an AI-powered stock analysis system built using the crewAI framework. It represents the future of automated financial information retrieval and analysis, where intelligent agents work collaboratively to gather, process, and synthesize complex market data into actionable investment insights.
+
+## Vision
+
+QuantBot is pioneering the next generation of financial analysis tools by creating an ecosystem of specialized AI agents that can:
+
+- **Automate Information Retrieval**: Eliminate manual data gathering by automatically fetching real-time market data, news, SEC filings, and financial reports
+- **Intelligent Data Synthesis**: Transform raw financial data into meaningful insights through multi-agent collaboration
+- **Scalable Analysis**: Analyze multiple stocks simultaneously with consistent methodology
+- **Adaptive Intelligence**: Continuously improve analysis quality through agent training and feedback loops
+- **Democratize Financial Analysis**: Make institutional-grade analysis accessible to individual investors
+
+Our goal is to build a comprehensive financial intelligence platform where AI agents can autonomously monitor markets, identify opportunities, and provide timely investment recommendations based on multiple data sources including real-time prices, fundamental analysis, news sentiment, and regulatory filings.
 
 ## Overview
 
-This project utilizes multiple AI agents working together to analyze stock data and make investment recommendations. The system fetches real-time stock data from Alpha Vantage API and processes it through specialized agents to provide actionable insights.
+This project utilizes multiple AI agents working together in a hierarchical structure to analyze stock data and make investment recommendations. Each agent specializes in different aspects of financial analysis, creating a robust decision-making framework that mimics the collaborative nature of professional investment teams.
 
 ## Key Features
 
@@ -31,7 +43,7 @@ This project utilizes multiple AI agents working together to analyze stock data 
 
 2. **Clone the repository:**
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/AgenticFSU/QuantBot.git
    cd QuantBot
    ```
 
@@ -52,6 +64,15 @@ This project utilizes multiple AI agents working together to analyze stock data 
    ```bash
    crewai install
    ```
+
+5. **macOS Additional Requirement:**
+   
+   If you're on macOS and encounter ONNX runtime errors, install the following:
+   ```bash
+   uv pip install onnxruntime==1.22.0
+   ```
+   
+   This ensures compatibility with macOS system architecture.
 
 ## Configuration
 
