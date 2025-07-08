@@ -1,0 +1,142 @@
+import os
+import json
+import logging
+import time
+import random
+
+from typing import Type
+from pydantic import BaseModel, Field
+from dotenv import load_dotenv
+from serpapi import GoogleSearch
+from newspaper import Article, Config
+from transformers import pipeline
+
+from crewai.tools import BaseTool
+
+# Load environment variables
+load_dotenv()
+SERPAPI_KEY = os.getenv("SERPAPI_API_KEY")
+if not SERPAPI_KEY:
+    raise EnvironmentError("Missing SERPAPI_API_KEY")
+
+# Logging setup
+os.makedirs("logs", exist_ok=True)
+logger = logging.getLogger(__name__)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    handlers=[
+        logging.FileHandler("logs/serp_news_tool.log"),
+        logging.StreamHandler()
+    ]
+)
+
+# Input schema
+class NewsSearchInput(BaseModel):
+    query: str = Field(..., description="Search keyword for financial news (e.g., 'Nvidia', 'Apple stock')")
+    max_articles: int = Field(5, description="Number of articles to fetch (default is 5)")
+
+# Configure newspaper to use custom headers (avoid 403s)
+config = Config()
+config.browser_user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+
+# Pipelines
+summarizer = pipeline("summarization", model="facebook/bart-large-cnn")
+classifier = pipeline("zero-shot-classification", model="facebook/bart-large-mnli")
+SENTIMENT_LABELS = ["BULLISH", "BEARISH", "NEUTRAL"]
+
+class NewsSentimentTool(BaseTool):
+    name: str = "news_sentiment_analysis"
+    description: str = (
+        "Searches SerpApi's Google News for a keyword and returns summaries with zero-shot sentiment classification."
+    )
+    args_schema: Type[BaseModel] = NewsSearchInput
+
+    def fetch_articles(self, query, max_articles):
+        logger.info(f"Querying SerpApi for: {query}")
+        search = GoogleSearch({
+            "api_key": SERPAPI_KEY,
+            "engine": "google_news",
+            "q": query,
+            "hl": "en",
+            "gl": "us"
+        })
+
+        results = search.get_dict().get("news_results", [])[:max_articles]
+        return results
+
+    def extract_text(self, url):
+        try:
+            article = Article(url, config=config)
+            article.download()
+            article.parse()
+            return article.text
+        except Exception as e:
+            logger.warning(f"Failed to extract article text from {url}: {e}")
+            return None
+
+    def summarize(self, text):
+        try:
+            return summarizer(text, max_length=130, min_length=30, do_sample=False)[0]['summary_text']
+        except Exception as e:
+            logger.warning(f"Summarization failed: {e}")
+            return None
+
+    def classify_sentiment(self, summary):
+        try:
+            result = classifier(summary, SENTIMENT_LABELS)
+            return {
+                "label": result["labels"][0],
+                "score": round(result["scores"][0], 4)
+            }
+        except Exception as e:
+            logger.warning(f"Sentiment classification failed: {e}")
+            return {"label": "NEUTRAL", "score": 0.0}
+
+    def _run(self, query: str, max_articles: int = 5) -> str:
+        articles = self.fetch_articles(query, max_articles)
+        output = []
+
+        for art in articles:
+            title = art.get("title")
+            url = art.get("link")
+            source = art.get("source")
+            date = art.get("date", "Unknown")
+
+            if not url:
+                logger.info(f"Skipping article without URL: {title}")
+                continue
+
+            text = self.extract_text(url)
+            if not text or len(text.strip()) < 50:
+                logger.info(f"Skipping short or empty article: {title}")
+                continue
+
+            summary = self.summarize(text)
+            if not summary:
+                continue
+
+            sentiment = self.classify_sentiment(summary)
+
+            logger.info(f"✓ {date} | {source} | {title} => {sentiment['label']}")
+
+            output.append({
+                "title": title,
+                "url": url,
+                "publish_date": date,
+                "source": source,
+                "summary": summary,
+                "sentiment": sentiment
+            })
+
+        json_path = "news_data.json"
+        with open(json_path, "w", encoding="utf-8") as f:
+            json.dump(output, f, indent=2)
+
+        return f"Saved {len(output)} articles with sentiment to {json_path}"
+
+
+# Optional for local test
+if __name__ == "__main__":
+    result = NewsSentimentTool()._run(query="Nvidia", max_articles=5)
+    print(result)
