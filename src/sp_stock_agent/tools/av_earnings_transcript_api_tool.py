@@ -4,9 +4,8 @@ import logging
 import requests
 from dotenv import load_dotenv
 
-from typing import Optional, Type
+from typing import Type
 from pydantic import BaseModel, Field
-from datetime import datetime
 
 from crewai.tools import BaseTool
 
@@ -125,7 +124,6 @@ class EarningsCallTranscriptTool(BaseTool):
 # 4) Quick sanity check
 # ------------------------------------------------------------
 if __name__ == "__main__":
-    import os, json
 
     load_dotenv()
 

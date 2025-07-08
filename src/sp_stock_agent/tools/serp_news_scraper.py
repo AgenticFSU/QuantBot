@@ -1,8 +1,6 @@
 import os
 import json
 import logging
-import time
-import random
 
 from typing import Type
 from pydantic import BaseModel, Field
@@ -129,7 +127,7 @@ class NewsSentimentTool(BaseTool):
                 "sentiment": sentiment
             })
 
-        json_path = "news_data.json"
+        json_path = "data/news_data.json"
         with open(json_path, "w", encoding="utf-8") as f:
             json.dump(output, f, indent=2)
 

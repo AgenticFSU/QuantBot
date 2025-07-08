@@ -10,6 +10,8 @@ dependencies = [
     "requests>=2.32.3",
     "sec-parser @ git+https://github.com/alphanome-ai/sec-parser.git",
     "rag @ git+https://github.com/AgenticFSU/SimpleRAG.git",
+    "serpapi>=0.1.5",
+    "newspaper3k>=0.2.8",
 ]
 
 [project.scripts]
