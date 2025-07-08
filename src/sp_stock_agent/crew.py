@@ -7,6 +7,8 @@ from typing import List
 # https://docs.crewai.com/concepts/crews#example-crew-class-with-decorators
 
 from sp_stock_agent.tools.alpha_vantage_api_tool import FetchStockSummaryTool
+from sp_stock_agent.tools.av_news_api_tool import NewsSentimentTool, NewsSentimentInput
+from sp_stock_agent.tools.av_earnings_transcript_api_tool import EarningsCallTranscriptTool, EarningsCallTranscriptInput
 from sp_stock_agent.tools.sec_10k_tool import SEC10KSummaryTool
 
 from .llms import gpt_4o, gpt_3_5_turbo, gpt_o4_mini
@@ -35,7 +37,7 @@ class SpStockAgent():
             #This line calls the agent of final decision
             config=self.agents_config["final_decision"],
             
-            tools=[FetchStockSummaryTool(), SEC10KSummaryTool()],  # Pass an instance of your tool
+            tools=[FetchStockSummaryTool(), SEC10KSummaryTool(), NewsSentimentTool(), EarningsCallTranscriptTool()],  # Pass an instance of your tool
 
             llm=self.llm,
 			verbose=True,
