@@ -37,7 +37,7 @@ class SpStockAgent():
     def stock_data_collector(self) -> Agent:
         return Agent(
             config=self.agents_config["stock_data_collector"],
-            tools=[StockSelectorTool(), FetchStockSummaryTool(), SEC10KSummaryTool(), EarningsCallTranscriptTool()],
+            tools=[FetchStockSummaryTool(), SEC10KSummaryTool(), EarningsCallTranscriptTool()],
             # llm=self.llm,
         )
     

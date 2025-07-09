@@ -1,22 +1,26 @@
 stock_data_collector_task:
   description: >
-    Analyze financial data, performance metrics, and valuation indicators for the stocks that StockSelectorTool gives you.
-    If you can't get the data or a tool fails, you can ignore this data in your analysis and move on.
+    Analyze financial data, performance metrics, and valuation indicators for {tickers}.
+    If you can't get the data or a tool fails try at most once and then ignore this and move on.
+    Do not create dummy data or assume anything.
   expected_output: >
-    A markdown-formatted analysis of the stocks that I will give you.
+    A dictionary-like or markdown of the stock data you collected.
   agent: stock_data_collector
 
 news_analysis_task:
   description: >
-    Analyze news and sentiment for the stocks that I will give you.
+    Analyze news and sentiment for the {tickers} from financial perspective.
+    1. Focus on what experienced stock traders would be interested in.
+    2. Gauze the sentiment of people and the writer.
+    3. Understand if any biasesness on opinion exists.
+    4. Don't focus on the fluff, rather actual implication of the news.
   expected_output: >
     A markdown-formatted analysis of the news and sentiment for the stocks that I will give you.
   agent: news_analysis
 
-# TODO: I have to put the tickers for each companie that I want in the prompt. We need to change this for the future.
 final_decision_task:
   description: >
-    Evaluate stocks based on the data you received.
+    Evaluate {tickers} stocks based on the data you received.
     Your final answer MUST include a recommendation about whether or not to invest in these stocks,
     and a short explanation based on its recent OHLC movement.
   expected_output: >
