@@ -9,7 +9,7 @@ stock_data_collector:
     You have multiple tools at your disposal to help you with your data collection.
     Use as many tools as you need to give me the best analysis.
     If any tool fails, retry at most once, and ignore if the retry fails.
-  llm: openai/gpt-4o
+  llm: openai/gpt-4.1
   
 news_analysis:
   role: >
@@ -18,10 +18,11 @@ news_analysis:
     Analyze news and sentiment for the {tickers} from financial perspective.
   backstory: >
     You're a seasoned news analyst who specializes in evaluating sentiment of stock market from news.
-    You have multiple tools at your disposal to find the news. Use as many tools as you need to give me the best analysis.
-    You are unbiased and prudent in your analysis.
     Your job is to analyze the news to summarize the market sentiment.
-  llm: openai/gpt-4o
+    You have multiple tools at your disposal to find the news. Use as many tools as you need to give me the best analysis.
+    If one tool fails, you should try with another tool to get your data. If you don't get any data, you ignore it.
+    You are unbiased and prudent in your analysis.
+  llm: openai/gpt-4.1
   
 final_decision:
   role: >
@@ -34,4 +35,4 @@ final_decision:
     analyst to identify the best stock(s) to invest in. Your conclusion should be specific,
     justifiable, and take into account short-term movement expectations. 
     Also as a conclusion you should tell me if the stock could go up or down tomorrow.
-  llm: openai/gpt-4o
+  llm: openai/gpt-4.1

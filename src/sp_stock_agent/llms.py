@@ -13,17 +13,10 @@ To use an LLM from this module, simply import the desired instance, for example:
 import os
 from crewai import LLM
 
-gpt_4o = LLM(
-    model="openai/gpt-4o", # call model by provider/model_name
-    temperature=0.8,
-    max_tokens=150,
-    top_p=0.9,
-    frequency_penalty=0.1,
-    presence_penalty=0.1,
-    stop=["END"],
-    seed=42
+gpt_4_1 = LLM(
+    model="openai/gpt-4.1",
+    temperature=0.2
 )
-
 # --- Ollama Models ---
 # Requires Ollama to be running locally.
 # Download and run Ollama from https://ollama.com/

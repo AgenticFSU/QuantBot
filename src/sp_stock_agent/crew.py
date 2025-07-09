@@ -1,4 +1,4 @@
-from crewai import Agent, Crew, Task
+from crewai import Agent, Crew, Task, Process
 from crewai.project import CrewBase, agent, crew, task
 from crewai.agents.agent_builder.base_agent import BaseAgent
 from typing import List
@@ -11,10 +11,8 @@ from sp_stock_agent.tools.av_news_api_tool import NewsSentimentTool
 # from sp_stock_agent.tools.serp_news_scraper import NewsSentimentTool as SerpNewsScraperTool
 from sp_stock_agent.tools.av_earnings_transcript_api_tool import EarningsCallTranscriptTool
 from sp_stock_agent.tools.sec_10k_tool import SEC10KSummaryTool
-from sp_stock_agent.tools.stock_selector import StockSelectorTool
 
-# from .llms import gpt_4o, gpt_3_5_turbo, gpt_o4_mini
-
+from .llms import gpt_4_1
 @CrewBase
 class SpStockAgent():
     """SpStockAgent crew"""
@@ -22,23 +20,14 @@ class SpStockAgent():
     agents: List[BaseAgent]
     tasks: List[Task]
 
-    # Learn more about YAML configuration files here:
-    # Agents: https://docs.crewai.com/concepts/agents#yaml-configuration-recommended
-    # Tasks: https://docs.crewai.com/concepts/tasks#yaml-configuration-recommended
-    
-    # If you would like to add tools to your agents, you can learn more about it here:
-    # https://docs.crewai.com/concepts/agents#agent-tools
-
     def __init__(self):
         pass
-        # self.llm = gpt_4o
 
     @agent
     def stock_data_collector(self) -> Agent:
         return Agent(
             config=self.agents_config["stock_data_collector"],
-            tools=[FetchStockSummaryTool(), SEC10KSummaryTool(), EarningsCallTranscriptTool()],
-            # llm=self.llm,
+            tools=[FetchStockSummaryTool(), SEC10KSummaryTool(), EarningsCallTranscriptTool()]
         )
     
     @task
@@ -53,8 +42,7 @@ class SpStockAgent():
     def news_analysis(self) -> Agent:
         return Agent(
             config=self.agents_config["news_analysis"],
-            tools=[NewsSentimentTool()],
-            # llm=self.llm,
+            tools=[NewsSentimentTool()]
         )
 
     @task
@@ -78,20 +66,12 @@ class SpStockAgent():
 			allow_delegation=True
         )
 
-
-
-    # To learn more about structured task outputs,
-    # task dependencies, and task callbacks, check out the documentation:
-    # https://docs.crewai.com/concepts/tasks#overview-of-a-task
-
-
     @task 
     def final_decision_task(self) -> Task:
         return Task(
             config=self.tasks_config['final_decision_task'],
             output_file='data/generated/financial_repord.md',      
-            agent=self.final_decision()         # This is needed to link the task and the agents
-            
+            agent=self.final_decision()
         )
 
 
@@ -102,9 +82,8 @@ class SpStockAgent():
         return Crew(
             agents=self.agents, # Automatically created by the @agent decorator
             tasks=self.tasks, # Automatically created by the @task decorator
-            # process=Process.hierarchical,
+            process=Process.hierarchical,
             verbose=True,
-            # manager_llm=gpt_o4_mini,
+            manager_llm=gpt_4_1,
             memory=True
-            # process=Process.hierarchical, # In case you wanna use that instead https://docs.crewai.com/how-to/Hierarchical/
         )

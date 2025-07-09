@@ -14,8 +14,9 @@ news_analysis_task:
     2. Gauze the sentiment of people and the writer.
     3. Understand if any biasesness on opinion exists.
     4. Don't focus on the fluff, rather actual implication of the news.
+    5. If you don't get news data, try at most 1 more time. Don't assume any news and ignore the failure.
   expected_output: >
-    A markdown-formatted analysis of the news and sentiment for the stocks that I will give you.
+    A markdown-formatted analysis of the news and sentiment for the stocks {tickers}.
   agent: news_analysis
 
 final_decision_task:

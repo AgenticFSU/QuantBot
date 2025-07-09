@@ -15,7 +15,6 @@ warnings.filterwarnings("ignore", category=SyntaxWarning, module="pysbd")
 class StockAnalysisState(BaseModel):
     raw_tickers: List[str] = Field(default_factory=list, description="Raw ticker input from user")
     validated_tickers: List[str] = Field(default_factory=list, description="Validated stock tickers")
-    current_year: str = Field(default="", description="Current year for analysis")
 
 class StockAnalysisFlow(Flow[StockAnalysisState]):
     """Flow for analyzing stock tickers using SP Stock Agent crew"""
@@ -35,7 +34,6 @@ class StockAnalysisFlow(Flow[StockAnalysisState]):
                 tickers = tickers[:5]
             
             self.state.raw_tickers = tickers
-            self.state.current_year = str(datetime.now().year)
             
             print(f"Received tickers: {self.state.raw_tickers}")
             return self.state.raw_tickers
@@ -48,11 +46,6 @@ class StockAnalysisFlow(Flow[StockAnalysisState]):
     def validate_tickers(self, raw_tickers):
         """Validate the tickers against the available tickers list"""
         print("Validating Tickers...")
-        
-        if not raw_tickers:
-            print("No tickers provided, using random selection")
-            self.state.validated_tickers = []
-            return self.state.validated_tickers
         
         try:
             # Load available tickers
@@ -90,8 +83,7 @@ class StockAnalysisFlow(Flow[StockAnalysisState]):
         
         # Prepare inputs for the crew
         crew_inputs = {
-            "tickers": validated_tickers,
-            # "current_year": self.state.current_year
+            "tickers": validated_tickers
         }
         
         try:
