@@ -1,26 +1,24 @@
-# financial_analysis_task:
-#   description: >
-#     Conduct an in-depth financial analysis of {ticker}, a constituent of the S&P 500. 
-#     Evaluate its recent financial performance, revenue growth, profitability, balance 
-#     sheet strength, and any notable risks or trends. Consider recent earnings reports, 
-#     news, macroeconomic factors, and analyst sentiment.
-#   expected_output: >
-#     Conduct an in-depth financial analysis of {ticker}, a constituent of the S&P 500. 
-#     Consider recent earnings reports, news, macroeconomic factors, and analyst
-#     sentiment. At the end, provide a clear recommendation: "Yes, invest" or "No, 
-#     do not invest", and summarize your reasoning.
-#   agent: financial_analyst
+stock_data_collector_task:
+  description: >
+    Analyze financial data, performance metrics, and valuation indicators for the stocks that StockSelectorTool gives you.
+    If you can't get the data or a tool fails, you can ignore this data in your analysis and move on.
+  expected_output: >
+    A markdown-formatted analysis of the stocks that I will give you.
+  agent: stock_data_collector
 
+news_analysis_task:
+  description: >
+    Analyze news and sentiment for the stocks that I will give you.
+  expected_output: >
+    A markdown-formatted analysis of the news and sentiment for the stocks that I will give you.
+  agent: news_analysis
 
-
-# OPTIMIZE: I have to put the tickers for each companie that I want in the prompt. We need to change this for the future.
+# TODO: I have to put the tickers for each companie that I want in the prompt. We need to change this for the future.
 final_decision_task:
   description: >
-    Use your stock analysis tool to evaluate AAPL, TSLA, MSFT, META. Summarize the recent 5-day performance.
+    Evaluate stocks based on the data you received.
     Your final answer MUST include a recommendation about whether or not to invest in these stocks,
     and a short explanation based on its recent OHLC movement.
-
   expected_output: >
     A markdown-formatted investment recommendation for these companies that I mentioned based on stock trends.
-
   agent: final_decision

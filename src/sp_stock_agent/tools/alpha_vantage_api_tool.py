@@ -36,7 +36,7 @@ class FetchStockSummaryTool(BaseTool):
         "(e.g. [AAPL, TSLA] or [AAPL]). "
         "Returns close price, volume, and highs/lows."
     )
-    args_schema: Type[BaseModel] = StockInput
+    args_schema: Type[StockInput] = StockInput
 
     def fetch_single_stock(self, symbol: str, api_key: str) -> dict:
         """Fetch data for a single stock symbol."""

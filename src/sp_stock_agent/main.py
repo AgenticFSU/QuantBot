@@ -15,15 +15,8 @@ def run():
     """
     Run the crew.
     """
-    inputs = {
-        # These are the inputs for the yaml files that can be added if we use a {}
-
-         'ticker' : 'SPY',
-         'symbol' : 'SPY'
-    }
-    
     try:
-        SpStockAgent().crew().kickoff(inputs=inputs)
+        SpStockAgent().crew().kickoff()
     except Exception as e:
         raise Exception(f"An error occurred while running the crew: {e}")
 

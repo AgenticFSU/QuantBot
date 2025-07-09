@@ -5,7 +5,7 @@ import requests
 from dotenv import load_dotenv
 
 from typing import Union, List, Optional, Type
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pydantic import BaseModel, Field
 
 # Import so that our tool can inherit from the Crew AI base class
@@ -94,7 +94,7 @@ class NewsSentimentTool(BaseTool):
             raise ValueError("ALPHA_VANTAGE_API_KEY environment variable must be set to use this tool.")
 
         # 2) Compute defaults for time_from / time_to
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         if not time_to:
             time_to = now.strftime("%Y%m%dT%H%M")
         if not time_from:
