@@ -13,6 +13,10 @@ dependencies = [
     "google-search-results>=2.4.2",
     "newspaper3k>=0.2.8",
     "lxml[html_clean]>=4.9.0",
+    "python-dotenv>=1.1.0",
+    "serpapi>=0.1.5",
+    "transformers>=4.46.3",
+    "torch>=2.7.1",
 ]
 
 [project.scripts]

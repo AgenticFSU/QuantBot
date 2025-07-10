@@ -12,6 +12,7 @@ from sp_stock_agent.tools.av_news_api_tool import NewsSentimentTool
 from sp_stock_agent.tools.av_earnings_transcript_api_tool import EarningsCallTranscriptTool
 from sp_stock_agent.tools.sec_10k_tool import SEC10KSummaryTool
 from sp_stock_agent.tools.stock_selector import StockSelectorTool
+from sp_stock_agent.tools.serp_news_scraper import NewsSentimentTool
 
 # from .llms import gpt_4o, gpt_3_5_turbo, gpt_o4_mini
 
@@ -37,7 +38,7 @@ class SpStockAgent():
     def stock_data_collector(self) -> Agent:
         return Agent(
             config=self.agents_config["stock_data_collector"],
-            tools=[StockSelectorTool(), FetchStockSummaryTool(), SEC10KSummaryTool(), EarningsCallTranscriptTool()],
+            tools=[StockSelectorTool(), FetchStockSummaryTool(), SEC10KSummaryTool(), EarningsCallTranscriptTool(), NewsSentimentTool()],
             # llm=self.llm,
         )
     
