@@ -135,7 +135,7 @@ class NewsSentimentTool(BaseTool):
 
 # Optional CLI test
 if __name__ == "__main__":
-    test_tickers = ["AAPL", "MSFT"]
+    test_tickers = ["AAPL", "MSFT", "GOOG"]
     tool = NewsSentimentTool()
     result = tool._run(tickers=test_tickers, max_articles=3)
     print(result)
