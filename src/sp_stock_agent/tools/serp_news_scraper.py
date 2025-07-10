@@ -1,14 +1,13 @@
 import os
 import json
 import logging
-
-from typing import Type
+import ast
+from typing import Type, List
 from pydantic import BaseModel, Field
 from dotenv import load_dotenv
 from serpapi import GoogleSearch
 from newspaper import Article, Config
 from transformers import pipeline
-
 from crewai.tools import BaseTool
 
 # Load environment variables
@@ -29,11 +28,6 @@ logging.basicConfig(
     ]
 )
 
-# Input schema
-class NewsSearchInput(BaseModel):
-    query: str = Field(..., description="Search keyword for financial news (e.g., 'Nvidia', 'Apple stock')")
-    max_articles: int = Field(5, description="Number of articles to fetch (default is 5)")
-
 # Configure newspaper to use custom headers (avoid 403s)
 config = Config()
 config.browser_user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
@@ -43,12 +37,17 @@ summarizer = pipeline("summarization", model="facebook/bart-large-cnn")
 classifier = pipeline("zero-shot-classification", model="facebook/bart-large-mnli")
 SENTIMENT_LABELS = ["BULLISH", "BEARISH", "NEUTRAL"]
 
+# Input schema for CrewAI
+class NewsSentimentInput(BaseModel):
+    tickers: List[str] = Field(..., description="List of stock tickers to analyze")
+    max_articles: int = Field(3, description="Max number of articles to fetch per ticker")
+
 class NewsSentimentTool(BaseTool):
     name: str = "news_sentiment_analysis"
     description: str = (
-        "Searches SerpApi's Google News for a keyword and returns summaries with zero-shot sentiment classification."
+        "Analyzes sentiment of financial news for selected stocks using summarization and zero-shot classification."
     )
-    args_schema: Type[BaseModel] = NewsSearchInput
+    args_schema: Type[BaseModel] = NewsSentimentInput
 
     def fetch_articles(self, query, max_articles):
         logger.info(f"Querying SerpApi for: {query}")
@@ -59,9 +58,7 @@ class NewsSentimentTool(BaseTool):
             "hl": "en",
             "gl": "us"
         })
-
-        results = search.get_dict().get("news_results", [])[:max_articles]
-        return results
+        return search.get_dict().get("news_results", [])[:max_articles]
 
     def extract_text(self, url):
         try:
@@ -91,50 +88,54 @@ class NewsSentimentTool(BaseTool):
             logger.warning(f"Sentiment classification failed: {e}")
             return {"label": "NEUTRAL", "score": 0.0}
 
-    def _run(self, query: str, max_articles: int = 5) -> str:
-        articles = self.fetch_articles(query, max_articles)
-        output = []
+    def _run(self, tickers: List[str], max_articles: int = 3) -> str:
+        all_results = []
 
-        for art in articles:
-            title = art.get("title")
-            url = art.get("link")
-            source = art.get("source")
-            date = art.get("date", "Unknown")
+        for ticker in tickers:
+            articles = self.fetch_articles(ticker, max_articles)
+            for art in articles:
+                title = art.get("title")
+                url = art.get("link")
+                source = art.get("source")
+                date = art.get("date", "Unknown")
 
-            if not url:
-                logger.info(f"Skipping article without URL: {title}")
-                continue
+                if not url:
+                    logger.info(f"Skipping article without URL: {title}")
+                    continue
 
-            text = self.extract_text(url)
-            if not text or len(text.strip()) < 50:
-                logger.info(f"Skipping short or empty article: {title}")
-                continue
+                text = self.extract_text(url)
+                if not text or len(text.strip()) < 50:
+                    logger.info(f"Skipping short or empty article: {title}")
+                    continue
 
-            summary = self.summarize(text)
-            if not summary:
-                continue
+                summary = self.summarize(text)
+                if not summary:
+                    continue
 
-            sentiment = self.classify_sentiment(summary)
+                sentiment = self.classify_sentiment(summary)
 
-            logger.info(f"✓ {date} | {source} | {title} => {sentiment['label']}")
+                logger.info(f"✓ {ticker} | {date} | {source} | {title} => {sentiment['label']}")
 
-            output.append({
-                "title": title,
-                "url": url,
-                "publish_date": date,
-                "source": source,
-                "summary": summary,
-                "sentiment": sentiment
-            })
+                all_results.append({
+                    "ticker": ticker,
+                    "title": title,
+                    "url": url,
+                    "publish_date": date,
+                    "source": source,
+                    "summary": summary,
+                    "sentiment": sentiment
+                })
 
-        json_path = "data/news_data.json"
+        json_path = "news_data.json"
         with open(json_path, "w", encoding="utf-8") as f:
-            json.dump(output, f, indent=2)
+            json.dump(all_results, f, indent=2)
 
-        return f"Saved {len(output)} articles with sentiment to {json_path}"
+        return f"Saved {len(all_results)} articles across {len(tickers)} tickers to {json_path}"
 
 
-# Optional for local test
+# Optional CLI test
 if __name__ == "__main__":
-    result = NewsSentimentTool()._run(query="Nvidia", max_articles=5)
+    test_tickers = ["AAPL", "MSFT", "GOOG"]
+    tool = NewsSentimentTool()
+    result = tool._run(tickers=test_tickers, max_articles=3)
     print(result)
