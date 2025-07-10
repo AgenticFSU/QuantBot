@@ -11,43 +11,12 @@ To use an LLM from this module, simply import the desired instance, for example:
 """
 
 import os
-# from dotenv import load_dotenv
 from crewai import LLM
 
-gpt_4o = LLM(
-    model="openai/gpt-4o", # call model by provider/model_name
-    temperature=0.8,
-    max_tokens=150,
-    top_p=0.9,
-    frequency_penalty=0.1,
-    presence_penalty=0.1,
-    stop=["END"],
-    seed=42
+gpt_4_1 = LLM(
+    model="openai/gpt-4.1",
+    temperature=0.2
 )
-
-# load_dotenv()
-# openai_api_key = os.getenv("OPENAI_API_KEY")
-# if not openai_api_key:
-#     raise ValueError("OPENAI_API_KEY is not set in your environment or .env file.")
-
-# gpt_4o = ChatOpenAI(
-#     model="gpt-4o",
-#     temperature=0.25,
-#     openai_api_key=openai_api_key
-# )
-
-# gpt_3_5_turbo = ChatOpenAI(
-#     model="gpt-3.5-turbo",
-#     temperature=0.25,
-#     openai_api_key=openai_api_key
-# )
-
-# gpt_o4_mini = ChatOpenAI(
-#     model="gpt-o4-mini",
-#     temperature=0.25,
-#     openai_api_key=openai_api_key
-# )
-
 # --- Ollama Models ---
 # Requires Ollama to be running locally.
 # Download and run Ollama from https://ollama.com/
