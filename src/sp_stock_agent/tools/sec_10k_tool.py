@@ -185,10 +185,8 @@ class Sec10KTool(BaseTool):
     def _run(self, symbol: str) -> str:
         """
         Main execution method for the tool.
-        
         Args:
-            symbol: Stock ticker symbol
-            
+            symbol: Stock ticker symbol 
         Returns:
             Markdown content of extracted sections
         """
@@ -206,8 +204,8 @@ class Sec10KTool(BaseTool):
         if markdown and not was_cached:
             retriever =  create_rag_retriever(
                     collection_name = "sec10k_chunks",
-                    chunk_size = 2000,
-                    chunk_overlap = 150,
+                    chunk_size = 1000,
+                    chunk_overlap = 200,
                     top_k = 8
                 ) 
             return retriever.ingest_text(markdown)

@@ -35,7 +35,7 @@ class Query(BaseModel):
         description="Queries about the specific company from finacial 10K document report."
     )
 
-class ChunkedSEC10KTool(BaseTool):
+class Chunked10KTool(BaseTool):
     """
     "Fetch chunked SEC 10-K filings "
     """
@@ -61,12 +61,17 @@ class ChunkedSEC10KTool(BaseTool):
             JSON string containing chunks and metadata
         """
         logger.info(f"Getting response for query: {query}")
-        retriever = create_rag_retriever(collection_name = "sec10k_chunks")
+        retriever = create_rag_retriever(
+                    collection_name = "sec10k_chunks",
+                    chunk_size = 1000,
+                    chunk_overlap = 200,
+                    top_k = 8
+                )
         return retriever.retrieve(query=query, k=10, return_metadata=False)
 
 
 # Example usage
 if __name__ == "__main__":
-    tool = ChunkedSEC10KTool()
+    tool = Chunked10KTool()
     result = tool._run(query="What kind of areas is the company providing the services?")
     print(result)
