@@ -3,7 +3,7 @@ import json
 import unittest
 from unittest.mock import patch, MagicMock
 
-from src.sp_stock_agent.tools.alpha_vantage_api_tool import FetchStockSummaryTool
+from sp_stock_agent.tools.alpha_vantage_api_tool import FetchStockSummaryTool
 
 class TestAlphaVantageAPITool(unittest.TestCase):
     def setUp(self):

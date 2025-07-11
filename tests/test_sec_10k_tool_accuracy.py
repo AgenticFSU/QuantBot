@@ -9,10 +9,8 @@ Focus on:
 
 import sys
 import os
-import json
 import unittest
 from unittest.mock import patch, MagicMock
-import tempfile
 import shutil
 
 # Add the src directory to the Python path
