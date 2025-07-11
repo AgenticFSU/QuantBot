@@ -24,7 +24,8 @@ DEFAULT_EMAIL = "email@example.com"
 # Target sections configuration
 TARGET_SECTIONS = {
     "item 1a": "all",
-    "item 7a": "text"
+    "item 7a": "all",
+    "item 8": "table"
 }
 
 # Setup simple global logger
@@ -67,7 +68,7 @@ class Sec10KTool(BaseTool):
         "from the latest 10-K filing for a given stock symbol. "
         "Returns the data as a hierarchical JSON object."
     )
-    ignore_table: bool = True
+    ignore_table: bool = False
 
     
     def _load_and_cache(self, symbol: str) -> tuple[bool, str]:
