@@ -19,6 +19,19 @@ news_analysis_task:
     A markdown-formatted analysis of the news and sentiment for the stocks {tickers}.
   agent: news_analysis
 
+research_analyst_task:
+  description: >
+    Conduct a thorough web-based research about {tickers} from a stock performance perspective.  
+    1. Perform a live search on the web to gather information; do not rely solely on internal tools or cached data.  
+    2. Focus on finding interesting and relevant information from the last month as of {current_date}.  
+    3. Look for events, decisions, reports, or trends that could significantly impact the stock price.  
+    4. Ignore irrelevant or trivial details; prioritize impactful insights.  
+    5. If no data is found, retry once more. Do not fabricate information if nothing is available.
+  expected_output: >
+    A markdown-formatted list with up to 10 bullet points summarizing the most relevant and impactful information about {tickers} discovered through web research.
+  agent: research_analyst
+
+
 final_decision_task:
   description: >
     Evaluate {tickers} stocks based on the data you received.

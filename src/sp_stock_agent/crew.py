@@ -11,7 +11,7 @@ from sp_stock_agent.tools.av_news_api_tool import NewsSentimentTool
 # from sp_stock_agent.tools.serp_news_scraper import NewsSentimentTool as SerpNewsScraperTool
 from sp_stock_agent.tools.av_earnings_transcript_api_tool import EarningsCallTranscriptTool
 from sp_stock_agent.tools.sec_10k_tool import SEC10KSummaryTool
-from sp_stock_agent.tools.serp_news_scraper import NewsScraperTool
+#from sp_stock_agent.tools.serp_news_scraper import NewsScraperTool
 
 from .llms import gpt_4_1
 @CrewBase
@@ -44,7 +44,7 @@ class SpStockAgent():
     def news_analysis(self) -> Agent:
         return Agent(
             config=self.agents_config["news_analysis"],
-            tools=[NewsSentimentTool(), NewsScraperTool()]
+            tools=[NewsSentimentTool()] #NewsScraperTool()
         )
 
     @task
@@ -54,8 +54,20 @@ class SpStockAgent():
             agent=self.news_analysis(),
             output_file="data/generated/news_analysis.md",
         )
-    
 
+    @agent 
+    def research_analyst(self) -> Agent:
+        return Agent(
+            config=self.agents_config["research_analyst"]
+        )
+    
+    @task 
+    def research_analyst_task(self) -> Task:
+        return Task(
+            config=self.tasks_config["research_analyst_task"],
+            output_file='data/generated/research_report.md',      
+        )
+        
     @agent 
     def final_decision(self) -> Agent:
         return Agent(

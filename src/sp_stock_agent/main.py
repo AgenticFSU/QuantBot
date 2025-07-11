@@ -2,6 +2,7 @@
 import json
 import sys
 import warnings
+from datetime import datetime
 from typing import List
 from pydantic import BaseModel, Field
 from crewai.flow.flow import Flow, listen, start
@@ -83,7 +84,8 @@ class StockAnalysisFlow(Flow[StockAnalysisState]):
         
         # Prepare inputs for the crew
         crew_inputs = {
-            "tickers": validated_tickers
+            "tickers": validated_tickers,
+            "current_date": datetime.now().strftime("%Y-%m-%d")
         }
         
         try:
