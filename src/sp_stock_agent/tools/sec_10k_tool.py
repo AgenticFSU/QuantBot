@@ -12,6 +12,7 @@ import sec_parser as sp
 from crewai.tools import BaseTool
 from sec_downloader import Downloader
 from html_to_markdown import convert_to_markdown
+from rag.core import create_rag_retriever
 
 # Constants
 CACHE_DIR = "data/10K"
@@ -26,25 +27,17 @@ TARGET_SECTIONS = {
     "item 7a": "text"
 }
 
-
-def _setup_logging() -> logging.Logger:
-    """Set up logging configuration for the SEC 10-K tool."""
-    os.makedirs(LOGS_DIR, exist_ok=True)
-    
-    logger = logging.getLogger(__name__)
-    
-    # Avoid duplicate handlers if already configured
-    if not logger.handlers:
-        logging.basicConfig(
-            level=logging.INFO,
-            format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-            handlers=[
-                logging.FileHandler(f'{LOGS_DIR}/sec_10k_tool.log'),
-                logging.StreamHandler()
-            ]
-        )
-    
-    return logger
+# Setup simple global logger
+os.makedirs(LOGS_DIR, exist_ok=True)
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler(f'{LOGS_DIR}/sec_10k_tool.log'),
+        logging.StreamHandler()
+    ]
+)
+logger = logging.getLogger(__name__)
 
 
 def _level_to_markdown(level: int) -> str:
@@ -59,7 +52,7 @@ def _level_to_markdown(level: int) -> str:
     return "#" * (level + 1) if level <= 5 else ""
 
 
-class SEC10KSummaryTool(BaseTool):
+class Sec10KTool(BaseTool):
     """
     A CrewAI tool for fetching, parsing, and extracting sections from SEC 10-K filings.
     
@@ -76,12 +69,8 @@ class SEC10KSummaryTool(BaseTool):
     )
     ignore_table: bool = True
 
-    def __init__(self, **kwargs):
-        """Initialize the SEC 10-K tool with logging setup."""
-        super().__init__(**kwargs)
-        self.logger = _setup_logging()
-
-    def _load_and_cache(self, symbol: str) -> str:
+    
+    def _load_and_cache(self, symbol: str) -> tuple[bool, str]:
         """Handle all cache operations: check cache, download if needed, save to cache.
         
         Args:
@@ -96,12 +85,12 @@ class SEC10KSummaryTool(BaseTool):
 
         # Try to load from cache first
         if os.path.exists(file_path):
-            self.logger.info(f"Loading from cache: {file_path}")
+            logger.info(f"Loading from cache: {file_path}")
             with open(file_path, "r") as f:
-                return f.read()
+                return True, f.read()
         
         # Download from SEC if not cached
-        self.logger.info(f"Downloading 10-K filing from SEC for symbol: {symbol}")
+        logger.info(f"Downloading 10-K filing from SEC for symbol: {symbol}")
         downloader = Downloader(DEFAULT_USER_AGENT, DEFAULT_EMAIL)
         html_content = downloader.get_filing_html(ticker=symbol, form="10-K")
         
@@ -109,20 +98,20 @@ class SEC10KSummaryTool(BaseTool):
         try:
             with open(file_path, "wb") as f:
                 f.write(html_content)
-            self.logger.info("Successfully cached 10-K filing")
+            logger.info("Successfully cached 10-K filing")
         except Exception as e:
-            self.logger.error(f"Error saving to cache: {e}")
+            logger.error(f"Error saving to cache: {e}")
             # Clean up corrupted cache file
             if os.path.exists(file_path):
                 try:
                     os.remove(file_path)
-                    self.logger.info(f"Cleaned up corrupted cache file: {file_path}")
+                    logger.info(f"Cleaned up corrupted cache file: {file_path}")
                 except Exception as cleanup_error:
-                    self.logger.error(f"Error deleting file {file_path}: {cleanup_error}")
+                    logger.error(f"Error deleting file {file_path}: {cleanup_error}")
             raise
         
         # Convert bytes to string for consistency
-        return html_content.decode('utf-8') if isinstance(html_content, bytes) else html_content
+        return False, html_content.decode('utf-8') if isinstance(html_content, bytes) else html_content
 
     def _process_and_save_sections(self, html: str, symbol: str) -> str:
         """Parse document, extract target sections, and save output.
@@ -135,7 +124,7 @@ class SEC10KSummaryTool(BaseTool):
             Markdown content of extracted sections
         """
         # Parse the document
-        self.logger.info("Parsing 10-K document")
+        logger.info("Parsing 10-K document")
         elements = sp.Edgar10KParser().parse(html)
         tree = sp.TreeBuilder().build(elements)
         top_level_sections = [item for part in tree for item in part.children]
@@ -157,7 +146,7 @@ class SEC10KSummaryTool(BaseTool):
                 sections_found += 1
                 section_type = TARGET_SECTIONS[matching_key]
 
-                self.logger.info(f"Found matching section: {section.semantic_element.text}")
+                logger.info(f"Found matching section: {section.semantic_element.text}")
                 markdown += f"# {section.semantic_element.text}\n"
                 
                 # Process all descendants of this section
@@ -181,7 +170,7 @@ class SEC10KSummaryTool(BaseTool):
                         html_tables = element.html_tag.get_source_code()
                         markdown += convert_to_markdown(html_tables)
 
-        self.logger.info(f"Found {sections_found} matching sections")
+        logger.info(f"Found {sections_found} matching sections")
         
         # Save the processed content
         os.makedirs(OUTPUT_DIR, exist_ok=True)
@@ -190,7 +179,7 @@ class SEC10KSummaryTool(BaseTool):
         with open(output_file, "w") as f:
             f.write(markdown)
         
-        self.logger.info(f"Saved parsed 10-K data to: {output_file}")
+        logger.info(f"Saved parsed 10-K data to: {output_file}")
         return markdown
 
     def _run(self, symbol: str) -> str:
@@ -203,22 +192,31 @@ class SEC10KSummaryTool(BaseTool):
         Returns:
             Markdown content of extracted sections
         """
-        self.logger.info(f"Starting 10-K processing for symbol: {symbol}")
+        logger.info(f"Starting 10-K processing for symbol: {symbol}")
         
         # Get 10-K filing content (handles caching automatically)
-        html = self._load_and_cache(symbol)
+        #TODO: Quick fix to check if the report was cached. If it was, chunking would not be needed.
+        was_cached, html = self._load_and_cache(symbol)
         
         # Process document and save results
         # TODO: Parameterizing required for section selection based on user prompt.
         # TODO: Advanced chunking and sorting approach needed.
         markdown = self._process_and_save_sections(html, symbol)
-        
-        return markdown
 
+        if markdown and not was_cached:
+            retriever =  create_rag_retriever(
+                    collection_name = "sec10k_chunks",
+                    chunk_size = 2000,
+                    chunk_overlap = 150,
+                    top_k = 8
+                ) 
+            return retriever.ingest_text(markdown)
+
+        return markdown
 
 # Example usage
 if __name__ == "__main__":
-    tool = SEC10KSummaryTool()
-    result = tool._run("TSLA")
+    tool = Sec10KTool()
+    result = tool._run("AAPL")
     print(json.dumps(result, indent=2))
     

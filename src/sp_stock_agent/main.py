@@ -6,8 +6,8 @@ from typing import List
 from pydantic import BaseModel, Field
 from crewai.flow.flow import Flow, listen, start
 from datetime import datetime
-from .tools.stock_selector import StockSelectorTool
 from sp_stock_agent.crew import SpStockAgent
+from .tools import Sec10KTool, StockSelectorTool
 
 warnings.filterwarnings("ignore", category=SyntaxWarning, module="pysbd")
 
@@ -73,6 +73,11 @@ class StockAnalysisFlow(Flow[StockAnalysisState]):
             warnings.warn("tickers.json file not found. Proceeding with provided tickers.", UserWarning)
             self.state.validated_tickers = [t.upper() for t in raw_tickers]
             return self.state.validated_tickers
+    
+    @listen(get_tickers)
+    def get_10K_document(self, validated_tickers):
+        for ticker in validated_tickers:
+            _ = Sec10KTool()._run(ticker)
 
     @listen(validate_tickers)
     def run_crew_analysis(self, validated_tickers):
