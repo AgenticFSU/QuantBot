@@ -1,4 +1,3 @@
-"""
 import os
 import json
 import logging
@@ -139,4 +138,3 @@ if __name__ == "__main__":
     tool = NewsScraperTool()
     result = tool._run(tickers=test_tickers, max_articles=3)
     print(result)
-"""

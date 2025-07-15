@@ -11,7 +11,7 @@ from sp_stock_agent.tools.av_news_api_tool import NewsSentimentTool
 # from sp_stock_agent.tools.serp_news_scraper import NewsSentimentTool as SerpNewsScraperTool
 from sp_stock_agent.tools.av_earnings_transcript_api_tool import EarningsCallTranscriptTool
 from sp_stock_agent.tools.sec_10k_tool import SEC10KSummaryTool
-#from sp_stock_agent.tools.serp_news_scraper import NewsScraperTool
+from sp_stock_agent.tools.serp_news_scraper import NewsScraperTool
 
 from .llms import gpt_4_1
 @CrewBase
@@ -44,7 +44,7 @@ class SpStockAgent():
     def news_analysis(self) -> Agent:
         return Agent(
             config=self.agents_config["news_analysis"],
-            tools=[NewsSentimentTool()] #NewsScraperTool()
+            tools=[NewsSentimentTool(), NewsScraperTool()]  
         )
 
     @task
