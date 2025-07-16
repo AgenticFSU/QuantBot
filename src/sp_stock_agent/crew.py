@@ -44,7 +44,7 @@ class SpStockAgent():
     def news_analysis(self) -> Agent:
         return Agent(
             config=self.agents_config["news_analysis"],
-            tools=[NewsSentimentTool(), NewsScraperTool()]
+            tools=[NewsSentimentTool(), NewsScraperTool()]  
         )
 
     @task
@@ -54,8 +54,20 @@ class SpStockAgent():
             agent=self.news_analysis(),
             output_file="data/generated/news_analysis.md",
         )
-    
 
+    @agent 
+    def research_analyst(self) -> Agent:
+        return Agent(
+            config=self.agents_config["research_analyst"]
+        )
+    
+    @task 
+    def research_analyst_task(self) -> Task:
+        return Task(
+            config=self.tasks_config["research_analyst_task"],
+            output_file='data/generated/research_report.md',      
+        )
+        
     @agent 
     def final_decision(self) -> Agent:
         return Agent(
