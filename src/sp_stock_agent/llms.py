@@ -17,6 +17,7 @@ gpt_4_1 = LLM(
     model="openai/gpt-4.1",
     temperature=0.2
 )
+
 # --- Ollama Models ---
 # Requires Ollama to be running locally.
 # Download and run Ollama from https://ollama.com/

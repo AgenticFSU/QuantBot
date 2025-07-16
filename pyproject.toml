@@ -17,6 +17,7 @@ dependencies = [
     "serpapi>=0.1.5",
     "transformers>=4.46.3",
     "torch>=2.7.1",
+    "html-to-markdown>=1.4.0",
 ]
 
 [project.scripts]

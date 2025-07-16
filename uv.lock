@@ -992,6 +992,18 @@ wheels = [
 ]
 
 [[package]]
+name = "html-to-markdown"
+version = "1.4.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "beautifulsoup4" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/67/62/c48b6e6cff38b9983544bef286f15f0ad249e8a5a09c6705a372bc0badd7/html_to_markdown-1.4.0.tar.gz", hash = "sha256:aced18e152f92c5a875e1ad2902b0c27527fda0b50376671941e3e399cf4d236", size = 16233, upload-time = "2025-06-23T15:52:06.059Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/bd/ac/38f0f75c8266f2598914f2118371d05faf6b37a5b2bd27c49135630254ba/html_to_markdown-1.4.0-py3-none-any.whl", hash = "sha256:0e3117740d3c92887995c5a251b52a9dbe9f16caaaca56bdf100fe01b227c70b", size = 15451, upload-time = "2025-06-23T15:52:04.6Z" },
+]
+
+[[package]]
 name = "httpcore"
 version = "1.0.9"
 source = { registry = "https://pypi.org/simple" }
@@ -3460,6 +3472,7 @@ source = { editable = "." }
 dependencies = [
     { name = "crewai", extra = ["tools"] },
     { name = "google-search-results" },
+    { name = "html-to-markdown" },
     { name = "lxml", extra = ["html-clean"] },
     { name = "newspaper3k" },
     { name = "pydantic" },
@@ -3481,6 +3494,7 @@ dev = [
 requires-dist = [
     { name = "crewai", extras = ["tools"], specifier = ">=0.141.0" },
     { name = "google-search-results", specifier = ">=2.4.2" },
+    { name = "html-to-markdown", specifier = ">=1.4.0" },
     { name = "lxml", extras = ["html-clean"], specifier = ">=4.9.0" },
     { name = "newspaper3k", specifier = ">=0.2.8" },
     { name = "pydantic", specifier = ">=2.11.5" },

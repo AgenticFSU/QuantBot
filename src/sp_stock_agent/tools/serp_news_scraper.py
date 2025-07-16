@@ -32,7 +32,7 @@ config = Config()
 config.browser_user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
 
 # Pipelines
-summarizer = pipeline("summarization", model="facebook/bart-large-cnn")
+summarizer = pipeline("summarization", model="Falconsai/text_summarization")
 classifier = pipeline("zero-shot-classification", model="facebook/bart-large-mnli")
 SENTIMENT_LABELS = ["BULLISH", "BEARISH", "NEUTRAL"]
 
@@ -44,7 +44,8 @@ class NewsScraperInput(BaseModel):
 class NewsScraperTool(BaseTool):
     name: str = "news_sentiment_analysis"
     description: str = (
-        "Analyzes sentiment of financial news for selected stocks using summarization and zero-shot classification."
+        "This tool scrapes financial news articles from the internet for selected stocks."
+        "It then analyzes the sentiment of the articles using summarization and zero-shot classification."
     )
     args_schema: Type[BaseModel] = NewsScraperInput
 
@@ -125,11 +126,11 @@ class NewsScraperTool(BaseTool):
                     "sentiment": sentiment
                 })
 
-        json_path = "news_data.json"
+        json_path = "data/news_data.json"
         with open(json_path, "w", encoding="utf-8") as f:
             json.dump(all_results, f, indent=2)
 
-        return f"Saved {len(all_results)} articles across {len(tickers)} tickers to {json_path}"
+        return all_results
 
 
 # Optional CLI test
