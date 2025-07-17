@@ -18,6 +18,15 @@ news_analysis_task:
   expected_output: >
     A markdown-formatted analysis of the news and sentiment for the stocks {tickers}.
   agent: news_analysis
+  
+web_analysis_task:
+  description: >
+    Scrape financial news from the web to gather data.
+    Use your scraping capabilities to find relevant news articles and extract data.
+    If you don't get any data, ignore it.
+  expected_output: >
+    A markdown-formatted summary of the scraped financial news articles.
+  agent: web_analysis
 
 research_analyst_task:
   description: >

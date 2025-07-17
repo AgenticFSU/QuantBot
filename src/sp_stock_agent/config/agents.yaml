@@ -24,6 +24,17 @@ news_analysis:
     You are unbiased and prudent in your analysis.
   llm: openai/gpt-4.1
 
+web_analysis:
+  role: >
+    Web Scraper for Financial News
+  goal: >
+    Scrape financial news from the web to gather data.
+  backstory: >
+    You are a web scraper specialized in gathering financial news.
+    Use your scraping capabilities to find relevant news articles and extract data.
+  llm: openai/gpt-4.1
+  
+
 research_analyst:
   role: >
     Senior Stock Researcher for {tickers}
