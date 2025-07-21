@@ -1,0 +1,21 @@
+ticker,date,company_name,industry,market_cap,price,volume,summary,todays_prediction,todays_price
+AAPL,7/18/2025,Apple Inc.,Technology,3E+12,210.5,48000000,"Apple shows bullish setup with strong support, positive news around supply chain and streaming; steady RSI.",Buy,218
+MSFT,7/18/2025,Microsoft Corp.,Technology,2.8E+12,511,30000000,Strong momentum but overbought RSI; earnings risk ahead; cautious entry advised.,Cautious Buy,516
+NVDA,7/18/2025,NVIDIA Corp.,Semiconductors,1.5E+12,173,40000000,Overbought RSI with insider selling; risk of short-term correction; hold if long.,Hold,172.5
+AMZN,7/18/2025,Amazon.com Inc.,Consumer Discretionary,1.7E+12,224,35000000,Rangebound with no catalyst; wait for cloud growth signals or earnings update.,Hold,224.5
+GOOG,7/18/2025,Alphabet Inc.,Technology,1.9E+12,185,28000000,Regulatory risks and lack of momentum; avoid until earnings provide clarity.,Avoid,184
+META,7/18/2025,Meta Platforms Inc.,Technology,1E+12,370,24000000,Neutral RSI; sentiment mixed due to legal and EU risks; flat outlook.,Hold,371
+TSLA,7/18/2025,Tesla Inc.,Automotive,8E+11,260,50000000,"High volatility, executive risk, poor sentiment; avoid before earnings.",Do Not Invest,255
+JPM,7/18/2025,JPMorgan Chase & Co.,Financials,5E+11,205,22000000,Positive earnings surprise and strong momentum; institutional favorite.,Invest,208
+UNH,7/18/2025,UnitedHealth Group,Healthcare,4.5E+11,480,18000000,Flat price action ahead of earnings; no movement expected until July 29.,Hold,480.5
+XOM,7/18/2025,Exxon Mobil Corp.,Energy,4.2E+11,108,20000000,Value play with ESG tailwinds and earnings potential; moderate upside.,Invest,110
+SE,7/18/2025,Sea Limited,E-commerce,25000000000,60,7000000,"Flat trend, no volume or catalyst; upside limited.",Do Not Invest,60.5
+IONQ,7/18/2025,IonQ Inc.,Quantum Computing,6000000000,42,5000000,Strong fundamentals but valuation stretched; wait for breakout or pullback.,Hold,42.5
+ASTS,7/18/2025,AST SpaceMobile,Telecommunications,2500000000,48,12000000,Explosive momentum with institutional backing; high risk/reward.,Invest,50
+PLTR,7/18/2025,Palantir Technologies,Technology,55000000000,28,26000000,Uptrend continues; watch for consolidation or analyst-driven reversals.,Invest,29
+QBTS,7/18/2025,D-Wave Quantum Inc.,Quantum Computing,500000000,1.5,15000000,"High volatility, no strong fundamentals; speculative momentum trade.",Speculative Buy,1.55
+ENVX,7/18/2025,Enovix Corp.,Energy Storage,3000000000,30,10000000,Technically overbought with strong volume; manage with stops.,Buy,31
+BIRD,7/18/2025,Allbirds Inc.,Retail,400000000,1.2,1000000,No news or momentum; not an active trade opportunity.,Do Not Invest,1.18
+TOST,7/18/2025,Toast Inc.,Fintech,10000000000,26,8000000,Positive trend with analyst upgrades and steady volume; swing setup.,Invest,27
+DNA,7/18/2025,Ginkgo Bioworks,Biotech,3000000000,2,3000000,No catalyst or trend; no momentum to trade.,Do Not Invest,1.98
+RKLB,7/18/2025,Rocket Lab USA,Aerospace,6000000000,12,11000000,High momentum and analyst upgrades; breakout candidate.,Invest,13

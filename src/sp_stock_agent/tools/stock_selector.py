@@ -1,7 +1,8 @@
 from crewai.tools import BaseTool
 import random
 
-TICKERS = ["AAPL", "MSFT", "GOOG", "AMZN", "TSLA", "NVDA", "META", "NFLX", "CSCO", "INTC"]
+TICKERS = ["AAPL", "MSFT", "GOOG", "AMZN", "TSLA", "NVDA", "META", "NFLX", "CSCO", "INTC"
+           "SE", "IONQ", "ASTS", "PLTR", "QBTS", "ENVX", "BIRD", "TOST", "DNA", "RKLB",]
 
 class StockSelectorTool(BaseTool):
     name: str = "stock_selector"
@@ -11,5 +12,5 @@ class StockSelectorTool(BaseTool):
 
     def _run(self) -> str:
         """Select the stocks that you think is worth exploring."""
-        number_of_stocks = random.randint(1, 5)
+        number_of_stocks = random.randint(1, 10)
         return random.sample(TICKERS, number_of_stocks)

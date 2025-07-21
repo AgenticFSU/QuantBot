@@ -10,12 +10,12 @@ from sp_stock_agent.tools.alpha_vantage_api_tool import FetchStockSummaryTool
 from sp_stock_agent.tools.av_news_api_tool import NewsSentimentTool
 # from sp_stock_agent.tools.serp_news_scraper import NewsSentimentTool as SerpNewsScraperTool
 from sp_stock_agent.tools.av_earnings_transcript_api_tool import EarningsCallTranscriptTool
-from sp_stock_agent.tools.sec_10k_tool import SEC10KSummaryTool
-from sp_stock_agent.tools.serp_news_scraper import NewsSentimentTool
+from sp_stock_agent.tools.sec_10k_tool import Sec10KTool
+from sp_stock_agent.tools.serp_news_scraper import NewsScraperTool
 from sp_stock_agent.tools.stock_selector import StockSelectorTool
 from sp_stock_agent.tools.web_scraper_tool import WebScraperTool
 
-from .tools import Sec10KTool, EarningsCallTranscriptTool, ChunkedSEC10KTool, NewsScraperTool, NewsSentimentTool, FetchStockSummaryTool
+from .tools import Sec10KTool, EarningsCallTranscriptTool, Chunked10KTool, NewsScraperTool, NewsSentimentTool, FetchStockSummaryTool
 from .llms import gpt_4_1
 @CrewBase
 class SpStockAgent():
@@ -31,7 +31,7 @@ class SpStockAgent():
     def stock_data_collector(self) -> Agent:
         return Agent(
             config=self.agents_config["stock_data_collector"],
-            tools=[FetchStockSummaryTool(), EarningsCallTranscriptTool(), Sec10KTool(), ChunkedSEC10KTool()],
+            tools=[FetchStockSummaryTool(), EarningsCallTranscriptTool(), Sec10KTool(), Chunked10KTool()],
             # llm=self.llm,
         )
     
@@ -58,20 +58,20 @@ class SpStockAgent():
             output_file="data/generated/news_analysis.md",
         )
 
-    @agent
-    def web_analysis(self) -> Agent:
-        return Agent(
-            config=self.agents_config["web_analysis"],
-            tools=[WebScraperTool()]
-        )
+    #@agent
+    #def web_analysis(self) -> Agent:
+    #    return Agent(
+    #        config=self.agents_config["web_analysis"],
+    #        tools=[WebScraperTool()]
+    #    )
 
-    @task
-    def web_analysis_task(self) -> Task:
-        return Task(
-            config=self.tasks_config["web_analysis_task"],
-            agent=self.web_analysis(),
-            output_file="data/generated/web_analysis.md",
-        )
+    #@task
+    #def web_analysis_task(self) -> Task:
+    #    return Task(
+    #        config=self.tasks_config["web_analysis_task"],
+    #        agent=self.web_analysis(),
+    #        output_file="data/generated/web_analysis.md",
+    #    )
     
     @agent 
     def research_analyst(self) -> Agent:

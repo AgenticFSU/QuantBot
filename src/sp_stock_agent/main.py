@@ -30,9 +30,9 @@ class StockAnalysisFlow(Flow[StockAnalysisState]):
         
         try:
             tickers = ticker_input.split() if ticker_input.strip() else []
-            if len(tickers) > 5:
-                warnings.warn("You entered more than 5 tickers. Only the first 5 will be used.", UserWarning)
-                tickers = tickers[:5]
+            if len(tickers) > 10:
+                warnings.warn("You entered more than 10 tickers. Only the first 10 will be used.", UserWarning)
+                tickers = tickers[:10]
             
             self.state.raw_tickers = tickers
             
