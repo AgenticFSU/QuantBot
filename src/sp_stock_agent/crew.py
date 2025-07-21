@@ -57,6 +57,25 @@ class SpStockAgent():
             agent=self.news_analysis(),
             output_file="data/generated/news_analysis.md",
         )
+<<<<<<< HEAD
+=======
+    
+    @agent
+    def web_analysis(self) -> Agent:
+        return Agent(
+            config=self.agents_config["web_analysis"],
+            tools=[WebScraperTool()]
+        )
+
+    @task
+    def web_analysis_task(self) -> Task:
+        return Task(
+            config=self.tasks_config["web_analysis_task"],
+            agent=self.web_analysis(),
+            output_file="data/generated/web_analysis.md",
+        )
+    
+>>>>>>> bd7715325c54cb18a5f3b2481e79bec156807a23
 
     #@agent
     #def web_analysis(self) -> Agent:

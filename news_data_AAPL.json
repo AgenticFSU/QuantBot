@@ -1,0 +1,92 @@
+[
+  {
+    "ticker": "AAPL",
+    "title": "\u201cIt\u2019s a No-Brainer,\u201d Says Wedbush Analyst Urging Apple (AAPL) Toward $30B Perplexity AI Deal",
+    "url": "https://www.tipranks.com/news/its-a-no-brainer-says-wedbush-analyst-urging-apple-aapl-toward-30b-perplexity-ai-deal",
+    "publish_date": "07/09/2025, 04:55 PM, +0000 UTC",
+    "source": {
+      "name": "TipRanks",
+      "icon": "https://encrypted-tbn2.gstatic.com/faviconV2?url=https://www.tipranks.com&client=NEWS_360&size=96&type=FAVICON&fallback_opts=TYPE,SIZE,URL",
+      "authors": [
+        "Radhika Saraogi"
+      ]
+    },
+    "summary": " Wedbush analyst Daniel Ives believes that Apple (AAPL) should acquire Perplexity AI, an AI search engine backed by Nvidia (NVDA) The Top analyst called this potential deal a \u201cno-brainer\u201d move to boost the tech giant\u2019s artificial intelligence (AI) capabilities.",
+    "sentiment": {
+      "label": "NEUTRAL",
+      "score": 0.6163
+    }
+  },
+  {
+    "ticker": "AAPL",
+    "title": "\u201cInconceivable to Me\u201d: Apple Stock (NASDAQ:AAPL) Drops as U.S. Government Calls It Out",
+    "url": "https://www.tipranks.com/news/inconceivable-to-me-apple-stock-nasdaqaapl-drops-as-u-s-government-calls-it-out",
+    "publish_date": "07/07/2025, 05:35 PM, +0000 UTC",
+    "source": {
+      "name": "TipRanks",
+      "icon": "https://encrypted-tbn2.gstatic.com/faviconV2?url=https://www.tipranks.com&client=NEWS_360&size=96&type=FAVICON&fallback_opts=TYPE,SIZE,URL",
+      "authors": [
+        "Steve Anderson"
+      ]
+    },
+    "summary": "The issue of where consumer electronics giant Apple would produce those consumer electronics is a thorny one. Trump advisor Peter Navarro called out Apple for moving too slowly in getting production out of China. The rebuke proved scathing to even shareholders, who sent shares down over 1.5% in Monday afternoon's trading.",
+    "sentiment": {
+      "label": "BEARISH",
+      "score": 0.8861
+    }
+  },
+  {
+    "ticker": "AAPL",
+    "title": "Apple Inc. (AAPL): \u201cWhat Do We Pay For Apple?\u201d Wonders Jim Cramer",
+    "url": "https://finance.yahoo.com/news/apple-inc-aapl-pay-apple-191213724.html",
+    "publish_date": "07/06/2025, 07:12 PM, +0000 UTC",
+    "source": {
+      "name": "Yahoo Finance",
+      "icon": "https://encrypted-tbn1.gstatic.com/faviconV2?url=https://finance.yahoo.com&client=NEWS_360&size=96&type=FAVICON&fallback_opts=TYPE,SIZE,URL",
+      "authors": [
+        "Ramish Cheema"
+      ]
+    },
+    "summary": "Apple Inc. (NASDAQ:AAPL) has become a regular feature of Cramer\u2019s morning show over the past couple of months. Cramer has defended the firm but dismissed its stock buyback as inadequate. The valuation continues to remain on his mind as he commented: \"What do we pay for Apple?\"",
+    "sentiment": {
+      "label": "NEUTRAL",
+      "score": 0.4217
+    }
+  },
+  {
+    "ticker": "AAPL",
+    "title": "Apple Should Consider Replacing Tim Cook as CEO, LightShed Says",
+    "url": "https://www.bloomberg.com/news/articles/2025-07-09/apple-should-consider-replacing-tim-cook-as-ceo-lightshed-says",
+    "publish_date": "07/09/2025, 06:20 PM, +0000 UTC",
+    "source": {
+      "name": "Bloomberg.com",
+      "icon": "https://encrypted-tbn1.gstatic.com/faviconV2?url=https://www.bloomberg.com&client=NEWS_360&size=96&type=FAVICON&fallback_opts=TYPE,SIZE,URL",
+      "authors": [
+        "Jeran Wittenstein"
+      ]
+    },
+    "summary": "Apple should consider replacing CEO Tim Cook, analysts say. The iPhone maker\u2019s struggles with artificial intelligence raise significant risks for the company, they say.",
+    "sentiment": {
+      "label": "NEUTRAL",
+      "score": 0.4373
+    }
+  },
+  {
+    "ticker": "AAPL",
+    "title": "Apple prepares to release first upgrade to Vision Pro headset: report (AAPL:NASDAQ)",
+    "url": "https://seekingalpha.com/news/4466254-apple-prepares-to-release-first-upgrade-to-vision-pro-headset-report",
+    "publish_date": "07/09/2025, 07:58 PM, +0000 UTC",
+    "source": {
+      "name": "Seeking Alpha",
+      "icon": "https://encrypted-tbn3.gstatic.com/faviconV2?url=https://seekingalpha.com&client=NEWS_360&size=96&type=FAVICON&fallback_opts=TYPE,SIZE,URL",
+      "authors": [
+        "Brandon Evans"
+      ]
+    },
+    "summary": "Apple is reportedly nearing completion of the first hardware upgrade to its Vision Pro headset. The update is expected to include a more powerful processor and ancillary features.",
+    "sentiment": {
+      "label": "NEUTRAL",
+      "score": 0.5825
+    }
+  }
+]

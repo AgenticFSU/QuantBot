@@ -1,0 +1,74 @@
+[
+  {
+    "ticker": "NVDA",
+    "title": "Nvidia-Backed Perplexity (NVDA) Takes on Google with New AI-Powered Web Browser",
+    "url": "https://www.tipranks.com/news/nvidia-backed-perplexity-nvda-takes-on-google-with-new-ai-powered-web-browser",
+    "publish_date": "07/09/2025, 04:52 PM, +0000 UTC",
+    "source": {
+      "name": "TipRanks",
+      "icon": "https://encrypted-tbn2.gstatic.com/faviconV2?url=https://www.tipranks.com&client=NEWS_360&size=96&type=FAVICON&fallback_opts=TYPE,SIZE,URL",
+      "authors": [
+        "Vince Condarcuri"
+      ]
+    },
+    "summary": "N Nvidia-backed Perplexity AI (NVDA) has introduced a new AI-powered web browser called Comet. Comet is a tool that turns entire browsing sessions into smooth, ongoing conversations. Users can ask questions, complete tasks, and conduct research through a single, intuitive interface.",
+    "sentiment": {
+      "label": "NEUTRAL",
+      "score": 0.7758
+    }
+  },
+  {
+    "ticker": "NVDA",
+    "title": "NVDA: Nvidia Insider Just Offloads $35 Million Worth of Shares",
+    "url": "https://finance.yahoo.com/news/nvda-nvidia-insider-just-offloads-124455740.html",
+    "publish_date": "07/09/2025, 12:44 PM, +0000 UTC",
+    "source": {
+      "name": "Yahoo Finance",
+      "icon": "https://encrypted-tbn1.gstatic.com/faviconV2?url=https://finance.yahoo.com&client=NEWS_360&size=96&type=FAVICON&fallback_opts=TYPE,SIZE,URL",
+      "authors": [
+        "Nauman Khan"
+      ]
+    },
+    "summary": "CEO Jen?Hsun Huang sold roughly $35.5 million worth of stock in multiple transactions, according to a 7 July SEC filing. Huang offloaded 225,000 shares at prices ranging from $153.04 to $160.94 per share.",
+    "sentiment": {
+      "label": "NEUTRAL",
+      "score": 0.4146
+    }
+  },
+  {
+    "ticker": "NVDA",
+    "title": "SA Asks: What's the most attractive AI stock right now? (NVDA:NASDAQ)",
+    "url": "https://seekingalpha.com/news/4465357-sa-asks-whats-the-most-attractive-ai-stock-right-now",
+    "publish_date": "07/06/2025, 04:00 PM, +0000 UTC",
+    "source": {
+      "name": "Seeking Alpha",
+      "icon": "https://encrypted-tbn3.gstatic.com/faviconV2?url=https://seekingalpha.com&client=NEWS_360&size=96&type=FAVICON&fallback_opts=TYPE,SIZE,URL",
+      "authors": [
+        "Val Brickates"
+      ]
+    },
+    "summary": "Yiannis Zourmpanos: Nebius Group sits at the intersection of the AI supercycle and undervalued. Michael Del Monte: The company is at the center of an AI revolution that is still underappreciated.",
+    "sentiment": {
+      "label": "NEUTRAL",
+      "score": 0.5442
+    }
+  },
+  {
+    "ticker": "NVDA",
+    "title": "Stocks making the biggest moves midday: AES, Nvidia, Bloom Energy, Verona Pharma and more",
+    "url": "https://www.cnbc.com/2025/07/09/stocks-making-the-biggest-moves-midday-aes-nvda-be-vrna.html",
+    "publish_date": "07/09/2025, 04:13 PM, +0000 UTC",
+    "source": {
+      "name": "CNBC",
+      "icon": "https://encrypted-tbn0.gstatic.com/faviconV2?url=https://www.cnbc.com&client=NEWS_360&size=96&type=FAVICON&fallback_opts=TYPE,SIZE,URL",
+      "authors": [
+        "Darla Mercado"
+      ]
+    },
+    "summary": "Monster Beverage dropped nearly 3% after a downgrade from Rothschild & Co. Shares of Fair Isaac slid 5%, placing them on track for a second straight losing day. Merck bought U.K.-based Verona Pharma in a roughly $10 billion deal.",
+    "sentiment": {
+      "label": "NEUTRAL",
+      "score": 0.5727
+    }
+  }
+]

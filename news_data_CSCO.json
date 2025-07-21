@@ -1,0 +1,32 @@
+[
+  {
+    "ticker": "CSCO",
+    "title": "Q1 Earnings Highs And Lows: Cisco (NASDAQ:CSCO) Vs The Rest Of The IT Services & Other Tech Stocks",
+    "url": "https://finance.yahoo.com/news/q1-earnings-highs-lows-cisco-033833802.html",
+    "publish_date": "07/08/2025, 10:52 AM, +0000 UTC",
+    "source": {
+      "name": "Yahoo Finance",
+      "icon": "https://encrypted-tbn1.gstatic.com/faviconV2?url=https://finance.yahoo.com&client=NEWS_360&size=96&type=FAVICON&fallback_opts=TYPE,SIZE,URL"
+    },
+    "summary": "The IT and tech services subsector is poised for growth as businesses accelerate cloud adoption, AI-driven network automation, and edge computing deployments. challenges on the horizon include intensifying competition from cloud-native networking providers, regulatory scrutiny over data privacy and cybersecurity.",
+    "sentiment": {
+      "label": "NEUTRAL",
+      "score": 0.6356
+    }
+  },
+  {
+    "ticker": "CSCO",
+    "title": "New Analyst Forecast: $CSCO Given 'Peer Perform' Rating",
+    "url": "https://www.nasdaq.com/articles/new-analyst-forecast-csco-given-peer-perform-rating",
+    "publish_date": "07/08/2025, 05:53 PM, +0000 UTC",
+    "source": {
+      "name": "Nasdaq",
+      "icon": "https://encrypted-tbn0.gstatic.com/faviconV2?url=https://www.nasdaq.com&client=NEWS_360&size=96&type=FAVICON&fallback_opts=TYPE,SIZE,URL"
+    },
+    "summary": "Multiple analysts have issued price targets for $CSCO recently. Cisco Systems gave a rating of 'Peer Perform' for the stock. Members of Congress have traded $C SCO stock 6 times in the past 6 months. We have seen 1,443 institutional investors add shares to their portfolio.",
+    "sentiment": {
+      "label": "NEUTRAL",
+      "score": 0.597
+    }
+  }
+]
