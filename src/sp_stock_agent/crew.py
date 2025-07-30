@@ -6,8 +6,8 @@ from typing import List
 # you can use the @before_kickoff and @after_kickoff decorators
 # https://docs.crewai.com/concepts/crews#example-crew-class-with-decorators
 
-from .tools import Sec10KTool, EarningsCallTranscriptTool, ChunkedSEC10KTool, NewsScraperTool, NewsSentimentTool, FetchStockSummaryTool
-from .llms import gpt_4_1
+from .tools import Sec10KTool, EarningsCallTranscriptTool, Chunked10KTool, NewsScraperTool, NewsSentimentTool, FetchStockSummaryTool
+from .llms import gpt_4_1, ollama_mistral
 @CrewBase
 class SpStockAgent():
     """SpStockAgent crew"""
@@ -22,7 +22,7 @@ class SpStockAgent():
     def stock_data_collector(self) -> Agent:
         return Agent(
             config=self.agents_config["stock_data_collector"],
-            tools=[FetchStockSummaryTool(), EarningsCallTranscriptTool(), Sec10KTool(), ChunkedSEC10KTool()],
+            tools=[FetchStockSummaryTool(), EarningsCallTranscriptTool(), Sec10KTool(), Chunked10KTool()],
             # llm=self.llm,
         )
     
@@ -30,7 +30,8 @@ class SpStockAgent():
     def stock_data_collector_task(self) -> Task:
         return Task(
             config=self.tasks_config["stock_data_collector_task"],
-            agent=self.stock_data_collector()
+            output_file = "data/generated/previous_returns.md",
+            agent=self.stock_data_collector(),
         )
     
 
@@ -82,7 +83,20 @@ class SpStockAgent():
             agent=self.final_decision()
         )
 
-
+    @agent
+    def decision_parser(self) -> Agent:
+        return Agent(
+            config=self.agents_config["decision_parser"]
+        )
+    
+    @task 
+    def decision_parser_task(self) -> Task:
+        return Task(
+            config=self.tasks_config['decision_parser_task'],
+            output_file='data/generated/TickerDecisionTable.md',      
+            agent=self.decision_parser()
+        )
+    
     # Initializing the crew and then calling it in main
     @crew
     def crew(self) -> Crew:
@@ -92,6 +106,6 @@ class SpStockAgent():
             tasks=self.tasks, # Automatically created by the @task decorator
             process=Process.hierarchical,
             verbose=True,
-            manager_llm=gpt_4_1,
+            manager_llm=gpt_4_1, # Or ollama_mistral or gpt_4_1
             memory=True
         )
