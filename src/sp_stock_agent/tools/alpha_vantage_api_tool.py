@@ -2,7 +2,6 @@ import json
 import logging
 import os
 import requests
-
 from typing import Union, List, Type
 from pydantic import BaseModel, Field
 
@@ -94,23 +93,24 @@ class FetchStockSummaryTool(BaseTool):
                     "symbol": symbol,
                     "last_updated": list(latest_5_periods.keys())[0] if latest_5_periods else None,   
                     "daily_data": {},
-                    "daily_returns": {},
+                    "intraday_returns": {},
                 }
 
-            prev_close = None
             for date, values in latest_5_periods.items():
+                open_price = float(values["1. open"])
                 close_price = float(values["4. close"])
+                
                 formatted_data["daily_data"][date] = {
-                    "open": float(values["1. open"]),
+                    "open": open_price,
                     "high": float(values["2. high"]),
                     "low": float(values["3. low"]),
                     "close": close_price,
                     "volume": int(values["5. volume"])
                 }
-                if prev_close:
-                    daily_return = (close_price - prev_close) / prev_close
-                    formatted_data["daily_returns"][date] = round(daily_return, 4)
-                prev_close = close_price
+
+                # Intraday return: (close - open) / open
+                intraday_return = (close_price - open_price) / open_price
+                formatted_data["intraday_returns"][date] = round(intraday_return, 4)
 
             # Fetch RSI
             rsi_params = {

@@ -48,3 +48,16 @@ final_decision:
     justifiable, and take into account short-term movement expectations. 
     Also as a conclusion you should tell me if the stock could go up or down tomorrow.
   llm: openai/gpt-4.1
+
+decision_parser:
+  role: >
+    Table-to-Signal Extractor Agent for Final Investment Decisions
+  goal: >
+    From the final decision table, extract only the stock tickers and their associated investment decision (e.g., "Invest", "Avoid", "Hold").
+  backstory: >
+    You are a specialized agent focused on transforming detailed final decision tables into a simplified format.
+    Your job is to output a clean list of stock tickers with their investment decision.
+    Ignore all other information like reasoning, sentiment, or metrics.
+    Always return your output as a table with exactly 5 columns: "Next day" "Ticker" and "Decision".
+    MAKE IT A CSV do not output it as a table, rather make it a csv
+  llm: openai/gpt-4.1

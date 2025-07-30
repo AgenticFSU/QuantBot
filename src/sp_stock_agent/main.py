@@ -26,13 +26,14 @@ class StockAnalysisFlow(Flow[StockAnalysisState]):
         Get the tickers for the stocks that I want to analyze.
         """
         print("\n==Enter the ticker of the stock you want to analyze. You can input 0 to 5 tickers. ==\n")
-        ticker_input = input("Enter tickers | space-separated e.g. META NFLX CSCO INTC or leave blank for random: ")
-        
+        #ticker_input = input("Enter tickers | space-separated e.g. META NFLX CSCO INTC or leave blank for random: ")
+        ticker_input = "SE IONQ ASTS PLTR QBTS ENVX BIRD TOST DNA RKLB NVDA AAPL MSFT NFLX META"
+
         try:
             tickers = ticker_input.split() if ticker_input.strip() else []
-            if len(tickers) > 5:
+            if len(tickers) > 15:
                 warnings.warn("You entered more than 5 tickers. Only the first 5 will be used.", UserWarning)
-                tickers = tickers[:5]
+                tickers = tickers[:]
             
             self.state.raw_tickers = tickers
             

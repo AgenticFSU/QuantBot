@@ -35,8 +35,20 @@ research_analyst_task:
 final_decision_task:
   description: >
     Evaluate {tickers} stocks based on the data you received.
-    Your final answer MUST include a recommendation about whether or not to invest in these stocks,
+    Your final answer MUST include a recommendation about whether TO INVEST OR NOT in these stocks for TOMORROWS INTRADAY,
     and a short explanation based on its recent OHLC movement.
   expected_output: >
     A markdown-formatted investment recommendation for these companies that I mentioned based on stock trends.
   agent: final_decision
+
+decision_parser_task:
+  description: >
+    From the markdown-formatted final decision output, extract a table with only two columns:
+    "Ticker" and the corresponding "Decision" made (e.g., Invest, Not invest).
+    Ignore any additional columns like sentiment, confidence, reasoning, or expected movement.
+    If the table is not available, try to extract the ticker and decision from the raw text.
+    Do not generate any assumptions or dummy values.
+  expected_output: >
+    A markdown-formatted table with two columns: "Ticker" and "Decision".
+  agent: decision_parser
+
