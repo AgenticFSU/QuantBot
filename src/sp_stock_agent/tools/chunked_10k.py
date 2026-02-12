@@ -35,7 +35,7 @@ class Query(BaseModel):
         description="Queries about the specific company from finacial 10K document report."
     )
 
-class Chunked10KTool(BaseTool):
+class ChunkedSEC10KTool(BaseTool):
     """
     "Fetch chunked SEC 10-K filings "
     """
@@ -72,6 +72,6 @@ class Chunked10KTool(BaseTool):
 
 # Example usage
 if __name__ == "__main__":
-    tool = Chunked10KTool()
+    tool = ChunkedSEC10KTool()
     result = tool._run(query="What kind of areas is the company providing the services?")
     print(result)
