@@ -1,0 +1,54 @@
+stock_data_collector_task:
+  description: >
+    Analyze financial data, performance metrics, and valuation indicators for {tickers}.
+    If you can't get the data or a tool fails try at most once and then ignore this and move on.
+    Do not create dummy data or assume anything.
+  expected_output: >
+    A dictionary-like or markdown of the stock data you collected.
+  agent: stock_data_collector
+
+news_analysis_task:
+  description: >
+    Analyze news and sentiment for the {tickers} from financial perspective.
+    1. Focus on what experienced stock traders would be interested in.
+    2. Gauze the sentiment of people and the writer.
+    3. Understand if any biasesness on opinion exists.
+    4. Don't focus on the fluff, rather actual implication of the news.
+    5. If you don't get news data, try at most 1 more time. Don't assume any news and ignore the failure.
+  expected_output: >
+    A markdown-formatted analysis of the news and sentiment for the stocks {tickers}.
+  agent: news_analysis
+
+research_analyst_task:
+  description: >
+    Conduct a thorough web-based research about {tickers} from a stock performance perspective.  
+    1. Perform a live search on the web to gather information; do not rely solely on internal tools or cached data.  
+    2. Focus on finding interesting and relevant information from the last month as of {current_date}.  
+    3. Look for events, decisions, reports, or trends that could significantly impact the stock price.  
+    4. Ignore irrelevant or trivial details; prioritize impactful insights.  
+    5. If no data is found, retry once more. Do not fabricate information if nothing is available.
+  expected_output: >
+    A markdown-formatted list with up to 10 bullet points summarizing the most relevant and impactful information about {tickers} discovered through web research.
+  agent: research_analyst
+
+
+final_decision_task:
+  description: >
+    Evaluate {tickers} stocks based on the data you received.
+    Your final answer MUST include a recommendation about whether TO INVEST OR NOT in these stocks for TOMORROWS INTRADAY,
+    and a short explanation based on its recent OHLC movement.
+  expected_output: >
+    A markdown-formatted investment recommendation for these companies that I mentioned based on stock trends.
+  agent: final_decision
+
+decision_parser_task:
+  description: >
+    From the markdown-formatted final decision output, extract a table with only two columns:
+    "Ticker" and the corresponding "Decision" made (e.g., Invest, Not invest).
+    Ignore any additional columns like sentiment, confidence, reasoning, or expected movement.
+    If the table is not available, try to extract the ticker and decision from the raw text.
+    Do not generate any assumptions or dummy values.
+  expected_output: >
+    A markdown-formatted table with two columns: "Ticker" and "Decision".
+  agent: decision_parser
+

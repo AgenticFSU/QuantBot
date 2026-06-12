@@ -1,0 +1,43 @@
+[project]
+name = "sp_stock_agent"
+version = "0.1.0"
+description = "sp_stock_agent using crewAI"
+authors = [{ name = "Your Name", email = "you@example.com" }]
+requires-python = ">=3.12,<3.14"
+dependencies = [
+    "crewai[tools]>=0.141.0",
+    "pydantic>=2.11.5",
+    "requests>=2.32.3",
+    "sec-parser @ git+https://github.com/alphanome-ai/sec-parser.git",
+    "rag @ git+https://github.com/AgenticFSU/SimpleRAG.git",
+    "google-search-results>=2.4.2",
+    "newspaper3k>=0.2.8",
+    "lxml[html_clean]>=4.9.0",
+    "python-dotenv>=1.1.0",
+    "serpapi>=0.1.5",
+    "transformers>=4.46.3",
+    "torch>=2.7.1",
+    "html-to-markdown>=1.4.0",
+]
+
+[project.scripts]
+sp_stock_agent = "sp_stock_agent.main:run"
+run_crew = "sp_stock_agent.main:run"
+train = "sp_stock_agent.main:train"
+replay = "sp_stock_agent.main:replay"
+test = "sp_stock_agent.main:test"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.crewai]
+type = "crew"
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[dependency-groups]
+dev = [
+    "pytest>=8.4.1",
+]
