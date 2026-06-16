@@ -179,12 +179,9 @@ if __name__ == "__main__":
     # BEFORE MARKET OPEN: record the bot's predictions for the NEXT trading day.
     append_predictions(prediction_date, decisions)
 
-    # AFTER MARKET CLOSE: scoring must use the NEXT trading day's data, which is
-    # not present in previous_returns.md. The guard below will refuse to score
-    # same-day data (the original leakage bug). Use evaluation_predictions.py,
-    # which fetches the next day's OHLC and scores it correctly.
-    update_actuals(prediction_date, prediction_date, previous_returns)
-
+    # AFTER MARKET CLOSE: scoring is NOT done here — previous_returns.md does not
+    # contain next-day OHLC and same-day scoring would be data leakage. Use
+    # evaluation_predictions.py after the target trading day has closed.
     print(
         "Predictions recorded. To score them without data leakage, run:\n"
         "  python scripts/evaluation_predictions.py --prediction-date "

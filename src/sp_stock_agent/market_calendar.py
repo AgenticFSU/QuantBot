@@ -127,7 +127,7 @@ def required_market_data_date(as_of: datetime | None = None) -> date:
     if not is_trading_day(today):
         return previous_trading_day(today)
     if as_of.hour > MARKET_CLOSE_HOUR or (
-        as_of.hour == MARKET_CLOSE_HOUR and as_of.minute >= 0
+        as_of.hour == MARKET_CLOSE_HOUR and as_of.minute > 0
     ):
         return today
     return previous_trading_day(today)
