@@ -1,6 +1,8 @@
 import json
 import logging
 import os
+import threading
+import time
 import requests
 from typing import Union, List, Type
 from pydantic import BaseModel, Field
@@ -22,6 +24,30 @@ logging.basicConfig(
         logging.StreamHandler()
     ]
 )
+
+# --- Alpha Vantage request pacing --------------------------------------------
+# Alpha Vantage throttles "burst" request patterns even when the per-minute
+# quota is not exceeded. We enforce a minimum spacing between consecutive
+# requests so calls are paced steadily across the whole process instead of
+# fired in a burst. The limiter is shared by every Alpha Vantage tool that
+# imports ``alpha_vantage_throttle`` so all AV traffic respects one pace.
+# Override the spacing with ALPHA_VANTAGE_MIN_INTERVAL_SEC (seconds);
+# 0.9s ~= 66 requests/min, comfortably under the 75/min premium ceiling.
+_AV_MIN_INTERVAL_SEC = float(os.getenv("ALPHA_VANTAGE_MIN_INTERVAL_SEC", "0.9"))
+_av_rate_lock = threading.Lock()
+_av_last_request_ts = 0.0
+
+
+def alpha_vantage_throttle() -> None:
+    """Block until the minimum spacing has elapsed since the last AV request."""
+    global _av_last_request_ts
+    with _av_rate_lock:
+        now = time.monotonic()
+        wait = _AV_MIN_INTERVAL_SEC - (now - _av_last_request_ts)
+        if wait > 0:
+            logger.debug(f"Throttling Alpha Vantage request for {wait:.2f}s")
+            time.sleep(wait)
+        _av_last_request_ts = time.monotonic()
 
 class StockInput(BaseModel):
     symbol: Union[str, List[str]] = Field(
@@ -76,6 +102,7 @@ class FetchStockSummaryTool(BaseTool):
         }
 
         try:
+            alpha_vantage_throttle()
             response = requests.get(url, params=params)
             data = response.json()
 
@@ -122,6 +149,7 @@ class FetchStockSummaryTool(BaseTool):
                 "apikey": api_key
             }
 
+            alpha_vantage_throttle()
             rsi_resp = requests.get(url, params=rsi_params)
             rsi_data = rsi_resp.json()
             rsi_values = rsi_data.get("Technical Analysis: RSI", {})
@@ -156,6 +184,7 @@ class FetchStockSummaryTool(BaseTool):
         }
 
         try:
+            alpha_vantage_throttle()
             response = requests.get(url, params=params)
             data = response.json()
 
@@ -167,8 +196,9 @@ class FetchStockSummaryTool(BaseTool):
 
             series_data = data[time_series_key]
 
-            # Get the most recent timestamp and price
-            most_recent_timestamp = sorted(series_data.keys())[0]
+            # Alpha Vantage returns intraday keys newest-first, but we must not
+            # assume ordering — pick the latest timestamp explicitly.
+            most_recent_timestamp = max(series_data.keys())
             most_recent_data = series_data[most_recent_timestamp]
             current_price = float(most_recent_data["4. close"])
 
@@ -249,6 +279,42 @@ class FetchStockSummaryTool(BaseTool):
             error_msg = f"Error: {str(e)}"
             logger.error(error_msg)
             return error_msg
+
+
+def validate_daily_data_freshness(
+    symbols: List[str],
+    required_date,
+    api_key: str | None = None,
+) -> dict:
+    """Check that each symbol has a daily OHLC bar on or after ``required_date``.
+
+    Returns a dict mapping stale/missing tickers to the latest bar date Alpha
+    Vantage returned (``None`` if the fetch failed entirely). An empty dict
+    means every symbol passed.
+    """
+    from datetime import datetime as _dt
+
+    if isinstance(required_date, str):
+        required = _dt.strptime(required_date, "%Y-%m-%d").date()
+    else:
+        required = required_date
+
+    api_key = api_key or os.environ.get("ALPHA_VANTAGE_API_KEY")
+    if not api_key:
+        raise ValueError("ALPHA_VANTAGE_API_KEY is not set.")
+
+    tool = FetchStockSummaryTool()
+    stale: dict = {}
+    for symbol in symbols:
+        data = tool.fetch_single_stock(symbol, api_key)
+        latest = (data or {}).get("last_updated")
+        if not latest:
+            stale[symbol] = None
+            continue
+        latest_date = _dt.strptime(latest, "%Y-%m-%d").date()
+        if latest_date < required:
+            stale[symbol] = latest
+    return stale
 
 
 #Test it locally in the file

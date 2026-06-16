@@ -12,7 +12,12 @@ from typing import List, Optional
 from pydantic import BaseModel, Field
 from crewai.flow.flow import Flow, listen, start
 from sp_stock_agent.crew import SpStockAgent
+from sp_stock_agent.usage_tracker import record_run
+from sp_stock_agent.evaluation_metadata import capture_metadata
+from sp_stock_agent.decision_table_writer import write_decision_table
+from sp_stock_agent.market_calendar import next_trading_day, required_market_data_date, now_eastern
 from .tools import Sec10KTool
+from .tools.alpha_vantage_api_tool import validate_daily_data_freshness
 
 warnings.filterwarnings("ignore", category=SyntaxWarning, module="pysbd")
 
@@ -218,22 +223,123 @@ class StockAnalysisFlow(Flow[StockAnalysisState]):
                 warnings.warn(f"10-K prefetch skipped for {ticker}: {e}", UserWarning)
 
     @listen(validate_tickers)
+    def check_market_data_freshness(self, validated_tickers):
+        """Abort if Alpha Vantage daily bars are not current enough to predict."""
+        if not validated_tickers:
+            return validated_tickers
+
+        et_now = now_eastern()
+        required = required_market_data_date(et_now)
+        print(
+            f"\n== Checking market data freshness (US/Eastern {et_now:%Y-%m-%d %H:%M}) ==\n"
+            f"Required daily OHLC bar date: {required} ({required.strftime('%A')})\n"
+        )
+
+        stale = validate_daily_data_freshness(validated_tickers, required)
+        if stale:
+            lines = [
+                "Market data is too stale to run a prediction. Alpha Vantage did not "
+                f"return a daily OHLC bar for {required} for every ticker.",
+                f"Run time (US/Eastern): {et_now:%Y-%m-%d %H:%M}",
+                f"Required bar date: {required}",
+                "",
+                "Per-ticker latest daily bar returned:",
+            ]
+            for ticker, latest in sorted(stale.items()):
+                if latest is None:
+                    lines.append(f"  {ticker}: fetch failed or no daily data")
+                else:
+                    lines.append(f"  {ticker}: latest bar is {latest} (need {required})")
+            lines.extend(
+                [
+                    "",
+                    "Common causes:",
+                    "  - Running before the US market close (4:00 PM ET) on a trading day.",
+                    "  - Alpha Vantage free-tier delay or rate limiting.",
+                    "  - API outage — retry after the session has fully settled.",
+                    "",
+                    "Use daily OHLC (interval=daily, current=false), not intraday snapshots.",
+                ]
+            )
+            raise ValueError("\n".join(lines))
+
+        print(f"✓ All {len(validated_tickers)} tickers have daily data through {required}")
+        return validated_tickers
+
+    @listen(check_market_data_freshness)
     def run_crew_analysis(self, validated_tickers):
         """
         Run the crew analysis with the validated tickers.
         """
         print(f"Starting stock analysis for: {validated_tickers}")
         
-        # Prepare inputs for the crew
+        # Prepare inputs for the crew.
+        # ``current_date``      = calendar day the prediction is MADE.
+        # ``market_data_date``  = trading session whose daily bar we verified.
+        # ``prediction_date``   = next VALID trading day the prediction is FOR.
+        et_now = now_eastern()
+        today = et_now.date()
+        market_data_date = required_market_data_date(et_now)
+        prediction_date = next_trading_day(today)
         crew_inputs = {
             "tickers": validated_tickers,
-            "current_date": datetime.now().strftime("%Y-%m-%d")
+            "current_date": today.strftime("%Y-%m-%d"),
+            "market_data_date": market_data_date.strftime("%Y-%m-%d"),
+            "prediction_date": prediction_date.strftime("%Y-%m-%d"),
         }
+        print(
+            f"Prediction made on {crew_inputs['current_date']} "
+            f"(market data as of {crew_inputs['market_data_date']}) "
+            f"for next trading day {crew_inputs['prediction_date']} "
+            f"({prediction_date.strftime('%A')})"
+        )
         
         try:
             # Run the crew with the validated tickers
-            result = SpStockAgent().crew().kickoff(inputs=crew_inputs)
+            crew = SpStockAgent().crew()
+            manager_model = getattr(getattr(crew, "manager_llm", None), "model", "openai/gpt-4.1")
+            t0 = time.perf_counter()
+            result = crew.kickoff(inputs=crew_inputs)
+            elapsed = time.perf_counter() - t0
             print("Stock analysis completed successfully!")
+
+            # Build the decision table deterministically (replaces decision_parser agent).
+            try:
+                decisions = write_decision_table(
+                    current_date=crew_inputs["current_date"],
+                    market_data_date=crew_inputs["market_data_date"],
+                    prediction_date=crew_inputs["prediction_date"],
+                )
+                print(f"Wrote decision table with {len(decisions)} entr{'y' if len(decisions) == 1 else 'ies'}")
+            except Exception as e:
+                warnings.warn(f"Could not write decision table: {e}", UserWarning)
+
+            # Record token/cost usage for this run.
+            try:
+                token_usage = getattr(result, "token_usage", None) or getattr(crew, "usage_metrics", None)
+                rec = record_run(
+                    model=manager_model,
+                    token_usage=token_usage,
+                    tickers=validated_tickers,
+                    wall_clock_sec=elapsed,
+                )
+                if rec.get("total_cost_usd") is not None:
+                    print(f"Run cost: ${rec['total_cost_usd']:.4f} for {rec.get('total_tokens')} tokens")
+                else:
+                    print(f"Run used {rec.get('total_tokens')} tokens (unpriced: add {manager_model} to model_pricing.json)")
+            except Exception as e:
+                warnings.warn(f"Cost tracking failed: {e}", UserWarning)
+
+            # Capture reproducibility metadata.
+            try:
+                capture_metadata(
+                    tickers=validated_tickers,
+                    current_date=crew_inputs["current_date"],
+                    manager_model=manager_model,
+                )
+            except Exception as e:
+                warnings.warn(f"Metadata capture failed: {e}", UserWarning)
+
             return result
             
         except Exception as e:

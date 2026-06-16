@@ -8,10 +8,11 @@ to extract specific sections like Risk Factors (Item 1A) and other relevant sect
 import json
 import logging
 import os
+import re
 import sec_parser as sp
 from crewai.tools import BaseTool
 from sec_downloader import Downloader
-from html_to_markdown import convert_to_markdown
+from html_to_markdown import convert
 from rag.core import create_rag_retriever
 
 # Constants
@@ -21,12 +22,40 @@ LOGS_DIR = "logs"
 DEFAULT_USER_AGENT = "MyCompanyName"
 DEFAULT_EMAIL = "email@example.com"
 
-# Target sections configuration
+# Target sections configuration. Keys map an "item" number to how much of the
+# section to extract: "all" (text + tables), "text", or "table".
 TARGET_SECTIONS = {
-    "item 1a": "all",
-    "item 7a": "all",
-    "item 8": "table"
+    "1a": "all",
+    "7a": "all",
+    "8": "table",
 }
+
+# Whitespace variants seen in real 10-K headings (non-breaking, figure, narrow
+# no-break spaces) that break naive ``startswith`` matching.
+_WHITESPACE_VARIANTS = ("\xa0", "\u2007", "\u202f", "\u2009", "\t")
+
+
+def _normalize_heading(text: str) -> str:
+    """Lowercase a heading and collapse all whitespace variants to single spaces."""
+    for ch in _WHITESPACE_VARIANTS:
+        text = text.replace(ch, " ")
+    return re.sub(r"\s+", " ", text).strip().lower()
+
+
+def _match_target_section(section_text: str):
+    """Return (item_key, extraction_kind) if the heading names a target section.
+
+    Tolerant of casing, punctuation, and spacing so headings like
+    ``"Item\xa01A. Risk Factors"``, ``"ITEM 1A"``, ``"Item1A —"`` or a bare
+    ``"1A. Risk Factors"`` all match. The leading word "item" is optional.
+    """
+    norm = _normalize_heading(section_text)
+    for item_num, kind in TARGET_SECTIONS.items():
+        # e.g. item_num "1a" -> r"^(?:item\s*)?1a\b" ; "8" -> r"^(?:item\s*)?8\b"
+        pattern = rf"^(?:item\s*)?{re.escape(item_num)}\b"
+        if re.match(pattern, norm):
+            return item_num, kind
+    return None, None
 
 # Setup simple global logger
 os.makedirs(LOGS_DIR, exist_ok=True)
@@ -135,17 +164,14 @@ class Sec10KTool(BaseTool):
         sections_found = 0
 
         for section in top_level_sections:
-            section_text = section.semantic_element.text.lower().strip()
+            section_text = section.semantic_element.text
             
-            # Find which target section matches the current section
-            matching_key = next(
-                (title for title in TARGET_SECTIONS.keys() if section_text.startswith(title)), 
-                None
-            )
+            # Find which target section matches the current heading (tolerant
+            # of casing, punctuation, and unusual whitespace).
+            matching_key, section_type = _match_target_section(section_text)
             
             if matching_key:
                 sections_found += 1
-                section_type = TARGET_SECTIONS[matching_key]
 
                 logger.info(f"Found matching section: {section.semantic_element.text}")
                 markdown += f"# {section.semantic_element.text}\n"
@@ -169,7 +195,7 @@ class Sec10KTool(BaseTool):
                         # TODO: Find a way to make existing function work
                         
                         html_tables = element.html_tag.get_source_code()
-                        markdown += convert_to_markdown(html_tables)
+                        markdown += convert(html_tables).content
 
         logger.info(f"Found {sections_found} matching sections")
         

@@ -1,10 +1,25 @@
+# Shared rule for EVERY task output file:
+# Start with a "## Report metadata" section listing run date, data-through date,
+# and (when applicable) the prediction target date. Placeholders come from the flow.
+
 stock_data_collector_task:
   description: >
     Analyze financial data, performance metrics, and valuation indicators for {tickers}.
+    For price/OHLC data you MUST call fetch_stock_summary with interval="daily" and
+    current=false (do NOT use current=true intraday snapshots). We need the last 5 daily
+    bars including the bar dated {market_data_date}.
     If you can't get the data or a tool fails try at most once and then ignore this and move on.
     Do not create dummy data or assume anything.
+
+    Your output file MUST begin with this metadata block (use these exact dates):
+    ## Report metadata
+    - **Run date:** {current_date}
+    - **Data collected through:** {market_data_date} (latest verified daily OHLC bar)
+    - **Prediction context:** This data supports intraday recommendations for **{prediction_date}**
   expected_output: >
-    A dictionary-like or markdown of the stock data you collected.
+    Markdown starting with the Report metadata block above, then a dictionary-like
+    or markdown summary of stock data collected, clearly stating the latest daily OHLC
+    date available for each ticker.
   agent: stock_data_collector
 
 news_analysis_task:
@@ -15,8 +30,15 @@ news_analysis_task:
     3. Understand if any biasesness on opinion exists.
     4. Don't focus on the fluff, rather actual implication of the news.
     5. If you don't get news data, try at most 1 more time. Don't assume any news and ignore the failure.
+
+    Your output file MUST begin with this metadata block (use these exact dates):
+    ## Report metadata
+    - **Run date:** {current_date}
+    - **Data collected through:** {current_date} (news window ending at this run; typically last 24 hours)
+    - **Prediction context:** This analysis supports intraday recommendations for **{prediction_date}**
   expected_output: >
-    A markdown-formatted analysis of the news and sentiment for the stocks {tickers}.
+    Markdown starting with the Report metadata block above, then a markdown-formatted
+    analysis of news and sentiment for the stocks {tickers}.
   agent: news_analysis
 
 research_analyst_task:
@@ -27,28 +49,59 @@ research_analyst_task:
     3. Look for events, decisions, reports, or trends that could significantly impact the stock price.  
     4. Ignore irrelevant or trivial details; prioritize impactful insights.  
     5. If no data is found, retry once more. Do not fabricate information if nothing is available.
+
+    Your output file MUST begin with this metadata block (use these exact dates):
+    ## Report metadata
+    - **Run date:** {current_date}
+    - **Data collected through:** {current_date} (web research current as of this run)
+    - **Prediction context:** This analysis supports intraday recommendations for **{prediction_date}**
   expected_output: >
-    A markdown-formatted list with up to 10 bullet points summarizing the most relevant and impactful information about {tickers} discovered through web research.
+    Markdown starting with the Report metadata block above, then up to 10 bullet points
+    summarizing the most relevant and impactful information about {tickers} from web research.
   agent: research_analyst
 
 
 final_decision_task:
   description: >
-    Evaluate {tickers} stocks based on the data you received.
-    Your final answer MUST include a recommendation about whether TO INVEST OR NOT in these stocks for TOMORROWS INTRADAY,
-    and a short explanation based on its recent OHLC movement.
+    Evaluate {tickers} stocks and decide whether to INVEST or NOT for the next
+    intraday trading session.
+
+    CRITICAL DATE RULES — read carefully and never invent or shift dates:
+      - This prediction is MADE on {current_date}.
+      - This prediction is FOR the next valid trading day: {prediction_date}
+        (weekends and US market holidays have already been excluded for you;
+        use this exact date and do NOT compute your own "tomorrow").
+      - Market data is verified through {market_data_date}. Do NOT assume a different data date.
+
+    Begin your answer with:
+      1. A "## Report metadata" block exactly like:
+         ## Report metadata
+         - **Run date:** {current_date}
+         - **Data collected through:** {market_data_date} (latest verified daily OHLC bar)
+         - **Prediction for:** {prediction_date} (next US trading day — intraday recommendation)
+      2. A title heading: "# Intraday Investment Recommendations for {prediction_date}".
+      3. A one-line clarity block exactly like:
+         "Prediction made on: {current_date} | Prediction is for (next trading day): {prediction_date} | Market data as of: {market_data_date}".
+      4. A short introduction paragraph (2-4 sentences) like a professional desk
+         note: explain that these are actionable, ticker-by-ticker intraday
+         recommendations based on the most recent OHLC, RSI, intraday returns,
+         and news/sentiment, and restate the "as of" data date.
+
+    Then give a concise, justifiable recommendation per ticker based on its
+    recent OHLC movement, RSI, and news/sentiment.
+
+    At the VERY END of your answer, append a machine-readable fenced code block in
+    EXACTLY this format, with one row per ticker and no extra commentary inside
+    the block:
+    ```csv
+    Ticker,Decision,NextDay
+    AAPL,Not invest,Down
+    ```
+    Use a Decision value of either "Invest" or "Not invest", and a NextDay value
+    of either "Up" or "Down". Include every ticker you were asked to evaluate and
+    do not invent tickers.
   expected_output: >
-    A markdown-formatted investment recommendation for these companies that I mentioned based on stock trends.
+    Markdown starting with the Report metadata block, then the title heading,
+    clarity line, short introduction, per-ticker recommendations, and the required
+    ```csv``` decision block (columns: Ticker, Decision, NextDay).
   agent: final_decision
-
-decision_parser_task:
-  description: >
-    From the markdown-formatted final decision output, extract a table with only two columns:
-    "Ticker" and the corresponding "Decision" made (e.g., Invest, Not invest).
-    Ignore any additional columns like sentiment, confidence, reasoning, or expected movement.
-    If the table is not available, try to extract the ticker and decision from the raw text.
-    Do not generate any assumptions or dummy values.
-  expected_output: >
-    A markdown-formatted table with two columns: "Ticker" and "Decision".
-  agent: decision_parser
-

@@ -11,6 +11,9 @@ from pydantic import BaseModel, Field
 # Import so that our tool can inherit from the Crew AI base class
 from crewai.tools import BaseTool
 
+# Shared Alpha Vantage request pacing (single limiter across all AV tools).
+from .alpha_vantage_api_tool import alpha_vantage_throttle
+
 # Ensure logs directory exists BEFORE configuring logging
 os.makedirs('logs', exist_ok=True)
 
@@ -78,6 +81,41 @@ class NewsSentimentTool(BaseTool):
     )
     args_schema: Type[NewsSentimentInput] = NewsSentimentInput
 
+    def _fetch_single_ticker(
+        self,
+        ticker: str,
+        api_key: str,
+        topics_param: Optional[str],
+        time_from: str,
+        time_to: str,
+        sort: str,
+        limit: int,
+    ) -> dict:
+        """Call NEWS_SENTIMENT for exactly one ticker and return the raw JSON."""
+        params = {
+            "function": "NEWS_SENTIMENT",
+            "tickers": ticker,
+            "apikey": api_key,
+            "sort": sort,
+            "limit": limit,
+            "time_from": time_from,
+            "time_to": time_to,
+        }
+        if topics_param:
+            params["topics"] = topics_param
+
+        logger.info(f"Requesting NEWS_SENTIMENT for {ticker} with params: {params}")
+
+        alpha_vantage_throttle()
+        response = requests.get("https://www.alphavantage.co/query", params=params)
+        try:
+            response.raise_for_status()
+        except requests.HTTPError as e:
+            logger.error(f"Alpha Vantage HTTP error for {ticker}: {e} — response text: {response.text}")
+            raise
+
+        return response.json()
+
     def _run(
         self,
         tickers: Union[str, List[str]],
@@ -101,39 +139,55 @@ class NewsSentimentTool(BaseTool):
             cutoff = now - timedelta(hours=24)
             time_from = cutoff.strftime("%Y%m%dT%H%M")
 
-        # 3) Prepare tickers string
-        tickers_param = (
-            ",".join(tickers) if isinstance(tickers, (list, tuple)) else tickers
+        # 3) Normalize tickers to a list and topics to a single param string.
+        # IMPORTANT: Alpha Vantage treats a comma-joined ``tickers`` value as an
+        # AND filter (articles must mention *every* symbol), which yields an
+        # almost-always-empty feed. We therefore issue one request per ticker
+        # and merge the results.
+        ticker_list = [tickers] if isinstance(tickers, str) else list(tickers)
+        topics_param = (
+            ",".join(topics) if isinstance(topics, (list, tuple)) else topics
         )
 
-        # 4) Build request parameters
-        params = {
-            "function": "NEWS_SENTIMENT",
-            "tickers": tickers_param,
-            "apikey": api_key,
-            "sort": sort,
-            "limit": limit,
-            "time_from": time_from,
-            "time_to": time_to,
+        # 4) Fetch each ticker independently and merge feeds (dedup by URL).
+        merged_feed: List[dict] = []
+        seen_urls = set()
+        per_ticker: dict = {}
+        errors: dict = {}
+
+        for ticker in ticker_list:
+            try:
+                data = self._fetch_single_ticker(
+                    ticker, api_key, topics_param, time_from, time_to, sort, limit
+                )
+            except Exception as e:  # one ticker failing must not kill the rest
+                logger.error(f"Failed to fetch news for {ticker}: {e}")
+                errors[ticker] = str(e)
+                continue
+
+            feed = data.get("feed", []) if isinstance(data, dict) else []
+            per_ticker[ticker] = data
+            for article in feed:
+                url = article.get("url")
+                if url and url in seen_urls:
+                    continue
+                if url:
+                    seen_urls.add(url)
+                merged_feed.append(article)
+
+        logger.info(
+            f"Received news for {len(per_ticker)} of {len(ticker_list)} tickers; "
+            f"{len(merged_feed)} unique articles"
+        )
+
+        result = {
+            "items": str(len(merged_feed)),
+            "feed": merged_feed,
+            "by_ticker": per_ticker,
         }
-        if topics:
-            params["topics"] = (
-                ",".join(topics) if isinstance(topics, (list, tuple)) else topics
-            )
-
-        logger.info(f"Requesting NEWS_SENTIMENT with params: {params}")
-
-        # 5) Call Alpha Vantage
-        response = requests.get("https://www.alphavantage.co/query", params=params)
-        try:
-            response.raise_for_status()
-        except requests.HTTPError as e:
-            logger.error(f"Alpha Vantage HTTP error: {e} — response text: {response.text}")
-            raise
-
-        data = response.json()
-        logger.info("Received response from NEWS_SENTIMENT endpoint")
-        return data
+        if errors:
+            result["errors"] = errors
+        return result
 
     def _parse_response(self, response: dict) -> str:
         """

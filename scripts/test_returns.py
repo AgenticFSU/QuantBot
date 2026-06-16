@@ -1,12 +1,33 @@
+"""DEPRECATED — has a data-leakage flaw; use scripts/evaluation_predictions.py.
+
+This script scored a prediction using the SAME trading day's OHLC that informed
+the decision (``trading_date`` was the latest date already present in
+``previous_returns.md``). Evaluating tomorrow's call with today's known data is
+look-ahead/data leakage.
+
+The leakage-free evaluator is ``scripts/evaluation_predictions.py``, which
+fetches fresh OHLC and scores strictly against a date AFTER the prediction date.
+``update_actuals`` below now refuses to score when the target date is not
+strictly after the prediction date.
+"""
+
 import json
 import csv
 import os
 import re
 import datetime
+import warnings
 
 
 print("Current working directory:", os.getcwd())
 CSV_FILE = "scripts/stock_report.csv"
+
+warnings.warn(
+    "scripts/test_returns.py is deprecated due to data leakage; "
+    "use scripts/evaluation_predictions.py instead.",
+    DeprecationWarning,
+    stacklevel=2,
+)
 
 # --- STEP 1: Initialize CSV file ---
 def init_csv():
@@ -84,8 +105,23 @@ def append_predictions(date, decisions):
                 })
 
 # --- STEP 5: Update actual OHLC and return after market close ---
-def update_actuals(date, previous_returns):
-    """Update stock CSV with actual prices and returns."""
+def update_actuals(prediction_date, target_date, previous_returns):
+    """Update stock CSV with actual prices/returns for the TARGET date.
+
+    Leakage guard: ``target_date`` must be strictly after ``prediction_date``.
+    Scoring a prediction with same-day (or earlier) data is look-ahead bias, so
+    in that case we refuse and direct callers to evaluation_predictions.py.
+    """
+    if not (target_date > prediction_date):
+        warnings.warn(
+            f"Refusing to score: target_date ({target_date}) is not strictly "
+            f"after prediction_date ({prediction_date}). This would be data "
+            f"leakage. Use scripts/evaluation_predictions.py to fetch and score "
+            f"the next trading day's OHLC.",
+            stacklevel=2,
+        )
+        return
+
     rows = []
     with open(CSV_FILE, "r", newline="") as f:
         rows = list(csv.reader(f))
@@ -95,9 +131,9 @@ def update_actuals(date, previous_returns):
 
     for ticker, data in previous_returns.items():
         stock_data = data["Stock Data"]
-        ohlc = stock_data["Daily OHLC (last 5 days)"].get(date)
+        ohlc = stock_data["Daily OHLC (last 5 days)"].get(target_date)
         if ohlc:
-            key = (date, ticker)
+            key = (target_date, ticker)
             if key in index_map:
                 idx = index_map[key]
                 open_price = ohlc["open"]
@@ -106,11 +142,11 @@ def update_actuals(date, previous_returns):
                 rows[idx][2] = f"{open_price:.2f}"
                 rows[idx][3] = f"{close_price:.2f}"
                 rows[idx][5] = f"{intraday_return:.2f}%"
-                print(f"Updated {ticker} on {date}: Open={open_price}, Close={close_price}, Return={intraday_return:.2f}%")
+                print(f"Updated {ticker} on {target_date}: Open={open_price}, Close={close_price}, Return={intraday_return:.2f}%")
             else:
-                print(f"Row for {ticker} on {date} not found in CSV")
+                print(f"Row for {ticker} on {target_date} not found in CSV")
         else:
-            print(f"No OHLC data for {ticker} on {date}")
+            print(f"No OHLC data for {ticker} on {target_date}")
 
 
     with open(CSV_FILE, "w", newline="") as f:
@@ -137,18 +173,23 @@ if __name__ == "__main__":
     decisions = load_decisions("data/generated/TickerDecisionTable.md")
     previous_returns = extract_json_from_markdown("data/generated/previous_returns.md")
 
-    trading_date = get_latest_date_from_previous_returns(previous_returns)
-    print(f"Using trading date from data: {trading_date}")
+    prediction_date = get_latest_date_from_previous_returns(previous_returns)
+    print(f"Using prediction date from data: {prediction_date}")
 
-    # BEFORE MARKET OPEN
-    # RUN THE BOT PREDICTIONS how can we do this? ALSO WE HAVE TO WAIT LIKE 20mins for the bot to make the decision and then call the funct
-    # As we have to wait until the ticker decision table gets created by the bot 
-    append_predictions(trading_date, decisions)
+    # BEFORE MARKET OPEN: record the bot's predictions for the NEXT trading day.
+    append_predictions(prediction_date, decisions)
 
-    # AFTER MARKET CLOSE
-    update_actuals(trading_date, previous_returns)
+    # AFTER MARKET CLOSE: scoring must use the NEXT trading day's data, which is
+    # not present in previous_returns.md. The guard below will refuse to score
+    # same-day data (the original leakage bug). Use evaluation_predictions.py,
+    # which fetches the next day's OHLC and scores it correctly.
+    update_actuals(prediction_date, prediction_date, previous_returns)
 
-    print("✅ Stock decisions updated successfully.")
+    print(
+        "Predictions recorded. To score them without data leakage, run:\n"
+        "  python scripts/evaluation_predictions.py --prediction-date "
+        f"{prediction_date}"
+    )
 
 
 

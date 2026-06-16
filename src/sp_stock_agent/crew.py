@@ -83,20 +83,11 @@ class SpStockAgent():
             agent=self.final_decision()
         )
 
-    @agent
-    def decision_parser(self) -> Agent:
-        return Agent(
-            config=self.agents_config["decision_parser"]
-        )
-    
-    @task 
-    def decision_parser_task(self) -> Task:
-        return Task(
-            config=self.tasks_config['decision_parser_task'],
-            output_file='data/generated/TickerDecisionTable.md',      
-            agent=self.decision_parser()
-        )
-    
+    # NOTE: The former ``decision_parser`` agent/task was removed. The decision
+    # table (data/generated/TickerDecisionTable.md) is now produced
+    # deterministically by sp_stock_agent.decision_table_writer, which parses
+    # the machine-readable csv block emitted by the final_decision agent.
+
     # Initializing the crew and then calling it in main
     @crew
     def crew(self) -> Crew:
@@ -107,5 +98,5 @@ class SpStockAgent():
             process=Process.hierarchical,
             verbose=True,
             manager_llm=gpt_4_1, # Or ollama_mistral or gpt_4_1
-            memory=True
+            memory=False
         )
