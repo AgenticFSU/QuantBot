@@ -9,8 +9,11 @@ Extraction order:
   2. Fallback: any markdown table row whose first cell looks like a ticker.
 
 Output is a CSV file with the run metadata folded in as leading columns:
-``RunDate,DataCollectedThrough,PredictionDate,Ticker,Decision``. Downstream
-evaluation scripts read it with ``csv.DictReader``.
+``RunDate,DataCollectedThrough,PredictionDate,Ticker,Decision,Open,Close,
+IntradayReturn,Rationale``. The ``Open``/``Close`` (from the ``**OHLC:**`` line),
+``IntradayReturn`` and ``Rationale`` values are pulled from each ticker's
+``### TICKER`` subsection in the final report, not from the trailing csv block.
+Downstream evaluation scripts read it with ``csv.DictReader``.
 """
 
 import csv
@@ -25,7 +28,17 @@ OUTPUT_TABLE = "data/generated/TickerDecisionTable.csv"
 # Column order for the generated decision table CSV. The run metadata that used
 # to live in a markdown header is now folded in as leading columns so the file
 # is a single, self-describing table.
-CSV_FIELDS = ["RunDate", "DataCollectedThrough", "PredictionDate", "Ticker", "Decision"]
+CSV_FIELDS = [
+    "RunDate",
+    "DataCollectedThrough",
+    "PredictionDate",
+    "Ticker",
+    "Decision",
+    "Open",
+    "Close",
+    "IntradayReturn",
+    "Rationale",
+]
 
 # Fenced block: ```csv\nTicker,...\n...\n```  (the ```csv tag is optional)
 _CSV_BLOCK_RE = re.compile(
@@ -33,6 +46,16 @@ _CSV_BLOCK_RE = re.compile(
     re.DOTALL | re.IGNORECASE,
 )
 _TICKER_RE = re.compile(r"^[A-Za-z][A-Za-z.\-]{0,5}$")
+
+# Per-ticker subsection heading: ``### AAPL (Apple Inc.)`` — capture the ticker.
+_TICKER_HEADING_RE = re.compile(r"^#{3,}\s+([A-Za-z][A-Za-z.\-]{0,5})\b")
+# Bold field lines within a subsection, e.g. ``- **Intraday Return:** +1.2%``.
+_INTRADAY_RE = re.compile(r"\*\*\s*Intraday Return\s*:?\s*\*\*\s*(.+)", re.IGNORECASE)
+_RATIONALE_RE = re.compile(r"\*\*\s*Rationale\s*:?\s*\*\*\s*(.+)", re.IGNORECASE)
+_OHLC_RE = re.compile(r"\*\*\s*OHLC\s*:?\s*\*\*\s*(.+)", re.IGNORECASE)
+# Individual O:/C: values within the OHLC line, e.g. ``O: 210.0`` / ``C: 211.5``.
+_OPEN_RE = re.compile(r"\bO\s*:\s*([^,]+)", re.IGNORECASE)
+_CLOSE_RE = re.compile(r"\bC\s*:\s*([^,]+)", re.IGNORECASE)
 
 
 def _parse_csv_block(text: str) -> List[Tuple[str, str]]:
@@ -75,6 +98,46 @@ def extract_decisions(report_text: str) -> List[Tuple[str, str]]:
     return _parse_csv_block(report_text) or _parse_markdown_table(report_text)
 
 
+def extract_ticker_details(report_text: str) -> dict:
+    """Map ``TICKER`` -> details dict parsed from the report body.
+
+    Each entry has ``open``/``close`` (from the ``**OHLC:**`` line),
+    ``intraday_return`` and ``rationale`` (from their respective bold fields in
+    the ``### TICKER`` subsection). Missing fields yield empty strings.
+    """
+    details: dict = {}
+    current: Optional[str] = None
+    for line in report_text.splitlines():
+        heading = _TICKER_HEADING_RE.match(line.strip())
+        if heading:
+            current = heading.group(1).upper()
+            details.setdefault(
+                current,
+                {"open": "", "close": "", "intraday_return": "", "rationale": ""},
+            )
+            continue
+        if current is None:
+            continue
+        m = _OHLC_RE.search(line)
+        if m:
+            ohlc = m.group(1)
+            open_m = _OPEN_RE.search(ohlc)
+            close_m = _CLOSE_RE.search(ohlc)
+            if open_m:
+                details[current]["open"] = open_m.group(1).strip()
+            if close_m:
+                details[current]["close"] = close_m.group(1).strip()
+            continue
+        m = _INTRADAY_RE.search(line)
+        if m:
+            details[current]["intraday_return"] = m.group(1).strip()
+            continue
+        m = _RATIONALE_RE.search(line)
+        if m:
+            details[current]["rationale"] = m.group(1).strip()
+    return details
+
+
 def write_decision_table(
     report_path: str = FINANCIAL_REPORT,
     output_path: str = OUTPUT_TABLE,
@@ -95,7 +158,9 @@ def write_decision_table(
     if not p.exists():
         raise FileNotFoundError(f"Final decision report not found: {report_path}")
 
-    decisions = extract_decisions(p.read_text())
+    report_text = p.read_text()
+    decisions = extract_decisions(report_text)
+    details = extract_ticker_details(report_text)
 
     run_date = current_date or ""
     data_through = market_data_date or ""
@@ -107,6 +172,7 @@ def write_decision_table(
         writer = csv.DictWriter(f, fieldnames=CSV_FIELDS)
         writer.writeheader()
         for ticker, decision in decisions:
+            info = details.get(ticker.upper(), {})
             writer.writerow(
                 {
                     "RunDate": run_date,
@@ -114,6 +180,10 @@ def write_decision_table(
                     "PredictionDate": pred_date,
                     "Ticker": ticker,
                     "Decision": decision,
+                    "Open": info.get("open", ""),
+                    "Close": info.get("close", ""),
+                    "IntradayReturn": info.get("intraday_return", ""),
+                    "Rationale": info.get("rationale", ""),
                 }
             )
     return decisions
