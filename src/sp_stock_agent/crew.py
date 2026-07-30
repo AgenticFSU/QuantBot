@@ -79,8 +79,16 @@ class SpStockAgent():
     def final_decision_task(self) -> Task:
         return Task(
             config=self.tasks_config['final_decision_task'],
-            output_file='data/generated/financial_report.md',      
-            agent=self.final_decision()
+            output_file='data/generated/financial_report.md',
+            agent=self.final_decision(),
+            # Feed the upstream analyst outputs so the decision agent can quote the
+            # actual OHLC/RSI/intraday numbers (from the stock data collector) plus
+            # news and research, rather than inventing them.
+            context=[
+                self.stock_data_collector_task(),
+                self.news_analysis_task(),
+                self.research_analyst_task(),
+            ],
         )
 
     # NOTE: The former ``decision_parser`` agent/task was removed. The decision

@@ -11,15 +11,21 @@ stock_data_collector_task:
     If you can't get the data or a tool fails try at most once and then ignore this and move on.
     Do not create dummy data or assume anything.
 
+    For EACH ticker, report the latest daily bar's OHLC (open, high, low, close,
+    volume), the most recent RSI value, and the latest intraday return (the
+    fetch_stock_summary tool returns all three). Keep the exact numbers — the
+    downstream decision report quotes them verbatim.
+
     Your output file MUST begin with this metadata block (use these exact dates):
     ## Report metadata
     - **Run date:** {current_date}
     - **Data collected through:** {market_data_date} (latest verified daily OHLC bar)
     - **Prediction context:** This data supports intraday recommendations for **{prediction_date}**
   expected_output: >
-    Markdown starting with the Report metadata block above, then a dictionary-like
-    or markdown summary of stock data collected, clearly stating the latest daily OHLC
-    date available for each ticker.
+    Markdown starting with the Report metadata block above, then a per-ticker
+    summary of the stock data collected. For every ticker include, with the actual
+    numbers: latest daily OHLC (O/H/L/C/Vol), the most recent RSI value, and the
+    latest intraday return, and clearly state the latest daily OHLC date available.
   agent: stock_data_collector
 
 news_analysis_task:
@@ -64,7 +70,7 @@ research_analyst_task:
 final_decision_task:
   description: >
     Evaluate {tickers} stocks and decide whether to INVEST or NOT for the next
-    intraday trading session.
+    intraday trading session ({prediction_date}).
 
     CRITICAL DATE RULES — read carefully and never invent or shift dates:
       - This prediction is MADE on {current_date}.
@@ -73,26 +79,59 @@ final_decision_task:
         use this exact date and do NOT compute your own "tomorrow").
       - Market data is verified through {market_data_date}. Do NOT assume a different data date.
 
-    Begin your answer with:
-      1. A "## Report metadata" block exactly like:
-         ## Report metadata
-         - **Run date:** {current_date}
-         - **Data collected through:** {market_data_date} (latest verified daily OHLC bar)
-         - **Prediction for:** {prediction_date} (next US trading day — intraday recommendation)
-      2. A title heading: "# Intraday Investment Recommendations for {prediction_date}".
-      3. A one-line clarity block exactly like:
-         "Prediction made on: {current_date} | Prediction is for (next trading day): {prediction_date} | Market data as of: {market_data_date}".
-      4. A short introduction paragraph (2-4 sentences) like a professional desk
-         note: explain that these are actionable, ticker-by-ticker intraday
-         recommendations based on the most recent OHLC, RSI, intraday returns,
-         and news/sentiment, and restate the "as of" data date.
+    You are given upstream analyst reports as context. USE them:
+      - Stock data report: latest daily OHLC (open/high/low/close/volume), RSI, and
+        intraday returns per ticker.
+      - News & sentiment report.
+      - Web research report.
+    Pull the ACTUAL numeric OHLC, RSI, and intraday-return values from the stock
+    data report for each ticker. NEVER fabricate numbers — if a value is missing
+    from the upstream reports, write "n/a".
 
-    Then give a concise, justifiable recommendation per ticker based on its
-    recent OHLC movement, RSI, and news/sentiment.
+    Produce the report in EXACTLY this structure and order:
+
+    1. A "## Report metadata" block exactly like:
+       ## Report metadata
+       - **Run date:** {current_date}
+       - **Data collected through:** {market_data_date} (latest verified daily OHLC bar)
+       - **Prediction for:** {prediction_date} (next US trading day — intraday recommendation)
+    2. A title heading: "# Intraday Investment Recommendations for {prediction_date}".
+    3. A one-line clarity block exactly like:
+       "Prediction made on: {current_date} | Prediction is for (next trading day): {prediction_date} | Market data as of: {market_data_date}".
+    4. A short introduction paragraph (2-4 sentences) like a professional desk note:
+       explain that these are actionable, ticker-by-ticker intraday recommendations
+       based on the most recent OHLC, RSI, intraday returns, and news/sentiment;
+       restate the "as of" data date; and note that picks are segmented into
+       High-Risk/Speculative and Standard Momentum/Investment-Grade.
+    5. Group EVERY ticker under exactly one of these second-level headings (omit a
+       heading only if it would contain no tickers):
+         ## Standard Momentum / Investment-Grade Picks
+         ## High-Risk / Speculative Picks
+         ## Avoid / Do Not Invest (Intraday)
+       Every "Invest" ticker goes in one of the first two groups (choose High-Risk
+       vs Standard based on volatility, valuation, and speculative catalysts).
+       Every "Not invest" ticker goes in the Avoid group.
+    6. Under each group, one "### TICKER (Company Name)" subsection per ticker with
+       these exact bold fields, each on its own line, followed by a "---" rule:
+         - **Recommendation:** INVEST   (or DO NOT INVEST)
+         - **OHLC:** O: <open>, H: <high>, L: <low>, C: <close>, Vol: <volume>
+         - **RSI:** <value>   (append " (oversold)" if < 30, " (overbought)" if > 70)
+         - **Intraday Return:** <+/-x.x%>
+         - **Rationale:** 1-2 sentences citing technicals, news, and sentiment.
+    7. A "## Summary Table" with columns EXACTLY:
+       | Ticker | Recommendation | High-Risk? | Rationale (OHLC, RSI, News) |
+       One row per ticker; High-Risk? is "Yes" or "No"; Rationale is a short phrase.
+    8. A "### Disclaimer" paragraph: intraday trading is speculative and can cause
+       significant losses; use stop-losses; this is not long-term investment advice.
+    9. Two summary lines:
+       "**Best risk/reward for tomorrow:**" followed by the INVEST tickers, and
+       "**Avoid for intraday:**" followed by the DO NOT INVEST tickers.
+    10. A final "**Data Source:**" line naming the upstream OHLC/RSI/intraday and
+        news/sentiment reports as of {market_data_date}.
 
     At the VERY END of your answer, append a machine-readable fenced code block in
     EXACTLY this format, with one row per ticker and no extra commentary inside
-    the block:
+    the block. This block is REQUIRED and MUST be the last thing in the file:
     ```csv
     Ticker,Decision,NextDay
     AAPL,Not invest,Down
@@ -102,6 +141,10 @@ final_decision_task:
     do not invent tickers.
   expected_output: >
     Markdown starting with the Report metadata block, then the title heading,
-    clarity line, short introduction, per-ticker recommendations, and the required
-    ```csv``` decision block (columns: Ticker, Decision, NextDay).
+    clarity line, and introduction; followed by the three grouped sections
+    (Standard Momentum / High-Risk / Avoid) where each ticker lists Recommendation,
+    OHLC, RSI, Intraday Return and Rationale; then a Summary Table (Ticker,
+    Recommendation, High-Risk?, Rationale), a Disclaimer paragraph, the best/avoid
+    summary lines, a Data Source line, and finally the required ```csv``` decision
+    block (columns: Ticker, Decision, NextDay) as the last thing in the file.
   agent: final_decision
