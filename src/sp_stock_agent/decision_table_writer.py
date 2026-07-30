@@ -1,4 +1,4 @@
-"""Deterministically build ``TickerDecisionTable.md`` from the final report.
+"""Deterministically build ``TickerDecisionTable.csv`` from the final report.
 
 This replaces the former ``decision_parser`` agent: instead of spending an LLM
 call to reformat the final decision, the ``final_decision`` agent is prompted to
@@ -8,8 +8,9 @@ Extraction order:
   1. The last fenced ``csv`` block whose header starts with ``Ticker``.
   2. Fallback: any markdown table row whose first cell looks like a ticker.
 
-Output matches the previous agent's format (a two-column ``| Ticker | Decision |``
-markdown table) so downstream evaluation scripts keep working.
+Output is a CSV file with the run metadata folded in as leading columns:
+``RunDate,DataCollectedThrough,PredictionDate,Ticker,Decision``. Downstream
+evaluation scripts read it with ``csv.DictReader``.
 """
 
 import csv
@@ -19,23 +20,12 @@ from pathlib import Path
 from typing import List, Optional, Tuple
 
 FINANCIAL_REPORT = "data/generated/financial_report.md"
-OUTPUT_TABLE = "data/generated/TickerDecisionTable.md"
+OUTPUT_TABLE = "data/generated/TickerDecisionTable.csv"
 
-
-def format_report_metadata(
-    *,
-    current_date: str,
-    market_data_date: str,
-    prediction_date: str,
-) -> str:
-    """Standard metadata header used across all generated report files."""
-    return (
-        "## Report metadata\n"
-        f"- **Run date:** {current_date}\n"
-        f"- **Data collected through:** {market_data_date} (from upstream agent reports)\n"
-        f"- **Prediction for:** {prediction_date} (next US trading day)\n"
-        "\n"
-    )
+# Column order for the generated decision table CSV. The run metadata that used
+# to live in a markdown header is now folded in as leading columns so the file
+# is a single, self-describing table.
+CSV_FIELDS = ["RunDate", "DataCollectedThrough", "PredictionDate", "Ticker", "Decision"]
 
 # Fenced block: ```csv\nTicker,...\n...\n```  (the ```csv tag is optional)
 _CSV_BLOCK_RE = re.compile(
@@ -93,7 +83,11 @@ def write_decision_table(
     market_data_date: Optional[str] = None,
     prediction_date: Optional[str] = None,
 ) -> List[Tuple[str, str]]:
-    """Read the final report and write the two-column decision table.
+    """Read the final report and write the decision table as CSV.
+
+    The run metadata (``current_date``/``market_data_date``/``prediction_date``)
+    is written into the leading ``RunDate``/``DataCollectedThrough``/
+    ``PredictionDate`` columns; when not provided those cells are left blank.
 
     Returns the list of extracted ``(ticker, decision)`` pairs.
     """
@@ -103,24 +97,25 @@ def write_decision_table(
 
     decisions = extract_decisions(p.read_text())
 
-    lines: List[str] = []
-    if current_date and market_data_date and prediction_date:
-        lines.append(
-            format_report_metadata(
-                current_date=current_date,
-                market_data_date=market_data_date,
-                prediction_date=prediction_date,
-            ).rstrip()
-        )
-        lines.append("")
-
-    lines.extend(["| Ticker | Decision |", "|--------|----------|"])
-    for ticker, decision in decisions:
-        lines.append(f"| {ticker} | {decision} |")
+    run_date = current_date or ""
+    data_through = market_data_date or ""
+    pred_date = prediction_date or ""
 
     out = Path(output_path)
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text("\n".join(lines) + "\n")
+    with out.open("w", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=CSV_FIELDS)
+        writer.writeheader()
+        for ticker, decision in decisions:
+            writer.writerow(
+                {
+                    "RunDate": run_date,
+                    "DataCollectedThrough": data_through,
+                    "PredictionDate": pred_date,
+                    "Ticker": ticker,
+                    "Decision": decision,
+                }
+            )
     return decisions
 
 

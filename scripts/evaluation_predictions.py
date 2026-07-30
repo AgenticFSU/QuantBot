@@ -33,7 +33,7 @@ load_dotenv(_PROJECT_ROOT / ".env")
 
 from sp_stock_agent.tools.alpha_vantage_api_tool import FetchStockSummaryTool  # noqa: E402
 
-DECISION_TABLE = "data/generated/TickerDecisionTable.md"
+DECISION_TABLE = "data/generated/TickerDecisionTable.csv"
 RESULTS_CSV = "scripts/evaluation_results.csv"
 RESULT_FIELDS = [
     "PredictionDate",
@@ -48,23 +48,19 @@ RESULT_FIELDS = [
 
 
 def load_decisions(path: str) -> dict:
-    """Parse the two-column ``| Ticker | Decision |`` markdown table."""
+    """Parse the ``Ticker``/``Decision`` columns from the decision table CSV."""
     p = Path(path)
     if not p.exists():
         raise FileNotFoundError(f"Decision table not found: {path}")
 
     decisions = {}
-    for line in p.read_text().splitlines():
-        if "|" not in line:
-            continue
-        cells = [c.strip() for c in line.strip().strip("|").split("|")]
-        if len(cells) < 2:
-            continue
-        if cells[0].lower() in ("ticker", "tickers"):
-            continue
-        if set(cells[0]) <= set("-: "):  # separator row
-            continue
-        decisions[cells[0].upper()] = cells[1]
+    with p.open(newline="") as f:
+        for row in csv.DictReader(f):
+            norm = {(k or "").strip().lower(): (v or "").strip() for k, v in row.items()}
+            ticker = norm.get("ticker")
+            decision = norm.get("decision")
+            if ticker and decision:
+                decisions[ticker.upper()] = decision
     return decisions
 
 

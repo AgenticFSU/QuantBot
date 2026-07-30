@@ -38,22 +38,22 @@ def init_csv():
             writer = csv.writer(f)
             writer.writerow(["Date", "Ticker", "Open", "Close", "Decision", "Return"])
 
-# --- STEP 2: Load decisions from markdown file ---
-def load_decisions(md_path):
-    """Load ticker decisions from a markdown file."""
+# --- STEP 2: Load decisions from CSV file ---
+def load_decisions(csv_path):
+    """Load ticker decisions from the decision table CSV."""
     decisions = {}
-    md_path = os.path.abspath(md_path)
-    print("Decision file path:", md_path)
+    csv_path = os.path.abspath(csv_path)
+    print("Decision file path:", csv_path)
 
-    if not os.path.exists(md_path):
-        raise FileNotFoundError(f"Decision file not found: {md_path}")
+    if not os.path.exists(csv_path):
+        raise FileNotFoundError(f"Decision file not found: {csv_path}")
 
-    with open(md_path, "r") as f:
-        lines = f.readlines()
-        for line in lines[2:]:  # skip header and separator
-            parts = [p.strip() for p in line.strip().split("|") if p.strip()]
-            if len(parts) == 2:
-                ticker, decision = parts
+    with open(csv_path, "r", newline="") as f:
+        for row in csv.DictReader(f):
+            norm = {(k or "").strip().lower(): (v or "").strip() for k, v in row.items()}
+            ticker = norm.get("ticker")
+            decision = norm.get("decision")
+            if ticker and decision:
                 decisions[ticker] = decision
     return decisions
 
@@ -170,7 +170,7 @@ if __name__ == "__main__":
     #Also we can change the stocks to run in different stocks 
     init_csv()
 
-    decisions = load_decisions("data/generated/TickerDecisionTable.md")
+    decisions = load_decisions("data/generated/TickerDecisionTable.csv")
     previous_returns = extract_json_from_markdown("data/generated/previous_returns.md")
 
     prediction_date = get_latest_date_from_previous_returns(previous_returns)

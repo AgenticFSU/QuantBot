@@ -92,7 +92,7 @@ class SpStockAgent():
         )
 
     # NOTE: The former ``decision_parser`` agent/task was removed. The decision
-    # table (data/generated/TickerDecisionTable.md) is now produced
+    # table (data/generated/TickerDecisionTable.csv) is now produced
     # deterministically by sp_stock_agent.decision_table_writer, which parses
     # the machine-readable csv block emitted by the final_decision agent.
 
